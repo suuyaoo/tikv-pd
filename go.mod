@@ -3,15 +3,16 @@ module github.com/tikv/pd
 go 1.17
 
 require (
-	github.com/BurntSushi/toml v0.3.1
+	github.com/BurntSushi/toml v1.3.2
+	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/cakturk/go-netstat v0.0.0-20200220111822-e5b49efee7a5
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e
 	github.com/coreos/go-semver v0.3.0
 	github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f
-	github.com/docker/go-units v0.4.0
+	github.com/docker/go-units v0.5.0
 	github.com/gogo/protobuf v1.3.2
-	github.com/golang/protobuf v1.5.0
-	github.com/google/btree v1.0.0
+	github.com/golang/protobuf v1.5.3
+	github.com/google/btree v1.1.2
 	github.com/gorilla/mux v1.7.4
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/juju/ratelimit v1.0.1
@@ -39,8 +40,8 @@ require (
 	github.com/unrolled/render v1.0.1
 	github.com/urfave/negroni v0.3.0
 	go.etcd.io/etcd v0.5.0-alpha.5.0.20230711085208-c92fb80f3944
-	go.uber.org/goleak v1.1.10
-	go.uber.org/zap v1.19.0
+	go.uber.org/goleak v1.1.11
+	go.uber.org/zap v1.24.0
 	golang.org/x/tools v0.1.12
 	google.golang.org/grpc v1.26.0
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
@@ -55,6 +56,7 @@ require (
 	github.com/VividCortex/mysqlerr v0.0.0-20200629151747-c28746d985dd // indirect
 	github.com/Xeoncross/go-aesctr-with-hmac v0.0.0-20200623134604-12b17a7ff502 // indirect
 	github.com/appleboy/gin-jwt/v2 v2.6.3 // indirect
+	github.com/benbjohnson/clock v1.1.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.0.2 // indirect
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
