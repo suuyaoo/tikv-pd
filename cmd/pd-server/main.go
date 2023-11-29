@@ -54,7 +54,7 @@ func main() {
 	case flag.ErrHelp:
 		exit(0)
 	default:
-		log.Fatal("parse cmd flags error", errs.ZapError(errs.ErrParseFlags))
+		log.Fatal("parse cmd flags error", errs.ZapError(errs.ErrParseFlags, err))
 	}
 
 	if cfg.ConfigCheck {
