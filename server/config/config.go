@@ -528,8 +528,12 @@ func (c *Config) Adjust(meta *toml.MetaData, reloading bool) error {
 	adjustString(&c.InitialClusterToken, defaultInitialClusterToken)
 
 	if len(c.Join) > 0 {
-		if _, err := url.Parse(c.Join); err != nil {
-			return errors.Errorf("failed to parse join addr:%s, err:%v", c.Join, err)
+		joins := strings.Split(c.Join, ",")
+
+		for _, join := range joins {
+			if _, err := url.Parse(join); err != nil {
+				return errors.Errorf("failed to parse join addr:%s, err:%v", c.Join, err)
+			}
 		}
 	}
 
