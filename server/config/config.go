@@ -512,6 +512,22 @@ func (c *Config) Adjust(meta *toml.MetaData, reloading bool) error {
 	adjustString(&c.AdvertisePeerUrls, c.PeerUrls)
 	adjustDuration(&c.Metric.PushInterval, defaultMetricsPushInterval)
 
+	if len(c.ClientUrls) > 0 {
+		c.ClientUrls = adjustUrls(c.ClientUrls)
+	}
+
+	if len(c.AdvertiseClientUrls) > 0 {
+		c.AdvertiseClientUrls = adjustUrls(c.AdvertiseClientUrls)
+	}
+
+	if len(c.PeerUrls) > 0 {
+		c.PeerUrls = adjustUrls(c.PeerUrls)
+	}
+
+	if len(c.AdvertisePeerUrls) > 0 {
+		c.AdvertisePeerUrls = adjustUrls(c.AdvertisePeerUrls)
+	}
+
 	if len(c.InitialCluster) == 0 {
 		// The advertise peer urls may be http://127.0.0.1:2380,http://127.0.0.1:2381
 		// so the initial cluster is pd=http://127.0.0.1:2380,pd=http://127.0.0.1:2381
@@ -522,12 +538,30 @@ func (c *Config) Adjust(meta *toml.MetaData, reloading bool) error {
 			c.InitialCluster += fmt.Sprintf("%s%s=%s", sep, c.Name, item)
 			sep = ","
 		}
+	} else {
+		items := strings.Split(c.InitialCluster, ",")
+		sep := ""
+		c.InitialCluster = ""
+		for _, item := range items {
+			confs := strings.Split(item, "=")
+			if len(confs) == 2 {
+				name := confs[0]
+				url := confs[1]
+				if !strings.HasPrefix(url, "http") {
+					url = "http://" + url
+				}
+				c.InitialCluster += fmt.Sprintf("%s%s=%s", sep, name, url)
+				sep = ","
+			}
+		}
 	}
 
 	adjustString(&c.InitialClusterState, defaultInitialClusterState)
 	adjustString(&c.InitialClusterToken, defaultInitialClusterToken)
 
 	if len(c.Join) > 0 {
+		c.Join = adjustUrls(c.Join)
+
 		joins := strings.Split(c.Join, ",")
 
 		for _, join := range joins {

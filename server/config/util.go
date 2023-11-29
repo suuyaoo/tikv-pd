@@ -15,6 +15,7 @@
 package config
 
 import (
+	"fmt"
 	"net/url"
 	"regexp"
 	"strings"
@@ -95,6 +96,9 @@ func parseUrls(s string) ([]url.URL, error) {
 	items := strings.Split(s, ",")
 	urls := make([]url.URL, 0, len(items))
 	for _, item := range items {
+		if !strings.HasPrefix(item, "http") {
+			item = "http://" + item
+		}
 		u, err := url.Parse(item)
 		if err != nil {
 			return nil, errs.ErrURLParse.Wrap(err).GenWithStackByCause()
@@ -104,4 +108,19 @@ func parseUrls(s string) ([]url.URL, error) {
 	}
 
 	return urls, nil
+}
+
+// adjustUrls adjust urls params
+func adjustUrls(s string) string {
+	result := ""
+	items := strings.Split(s, ",")
+	sep := ""
+	for _, item := range items {
+		if !strings.HasPrefix(item, "http") {
+			item = "http://" + item
+		}
+		result += fmt.Sprintf("%s%s", sep, item)
+		sep = ","
+	}
+	return result
 }
