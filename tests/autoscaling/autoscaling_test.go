@@ -71,17 +71,6 @@ func (s *apiTestSuite) TestAPI(c *C) {
                     "resource_a"
                 ]
             }
-        },
-        {
-            "component":"tidb",
-            "cpu_rule":{
-                "max_threshold":0.8,
-                "min_threshold":0.2,
-                "max_count":2,
-                "resource_types":[
-                    "resource_a"
-                ]
-            }
         }
     ],
     "resources":[

@@ -33,9 +33,7 @@ import (
 
 const (
 	tikvSumCPUUsageMetricsPattern = `sum(increase(tikv_thread_cpu_seconds_total[%s])) by (instance, kubernetes_namespace)`
-	tidbSumCPUUsageMetricsPattern = `sum(increase(process_cpu_seconds_total{component="tidb"}[%s])) by (instance, kubernetes_namespace)`
 	tikvCPUQuotaMetricsPattern    = `tikv_server_cpu_cores_quota`
-	tidbCPUQuotaMetricsPattern    = `tidb_server_maxprocs`
 	instanceLabelName             = "instance"
 	namespaceLabelName            = "kubernetes_namespace"
 	addressFormat                 = "pod-name.peer-svc.namespace.svc:port"
@@ -155,12 +153,10 @@ func extractInstancesFromResponse(resp promModel.Value, addresses []string) (Que
 }
 
 var cpuUsagePromQLTemplate = map[ComponentType]string{
-	TiDB: tidbSumCPUUsageMetricsPattern,
 	TiKV: tikvSumCPUUsageMetricsPattern,
 }
 
 var cpuQuotaPromQLTemplate = map[ComponentType]string{
-	TiDB: tidbCPUQuotaMetricsPattern,
 	TiKV: tikvCPUQuotaMetricsPattern,
 }
 

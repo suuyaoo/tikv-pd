@@ -14,16 +14,6 @@
 
 package autoscaling
 
-import (
-	"encoding/json"
-	"fmt"
-	"regexp"
-	"strings"
-
-	"github.com/tikv/pd/pkg/etcdutil"
-	"go.etcd.io/etcd/clientv3"
-)
-
 // Strategy within a HTTP request provides rules and resources to help make decision for auto scaling.
 type Strategy struct {
 	Rules     []*Rule     `json:"rules"`
@@ -76,16 +66,12 @@ type ComponentType int
 const (
 	// TiKV indicates the TiKV component
 	TiKV ComponentType = iota
-	// TiDB indicates the TiDB component
-	TiDB
 )
 
 func (c ComponentType) String() string {
 	switch c {
 	case TiKV:
 		return "tikv"
-	case TiDB:
-		return "tidb"
 	default:
 		return "unknown"
 	}
@@ -115,79 +101,4 @@ func (c MetricType) String() string {
 type instance struct {
 	id      uint64
 	address string
-}
-
-// TiDBInfo record the detail tidb info
-type TiDBInfo struct {
-	Version        *string           `json:"version,omitempty"`
-	StartTimestamp *int64            `json:"start_timestamp,omitempty"`
-	Labels         map[string]string `json:"labels"`
-	GitHash        *string           `json:"git_hash,omitempty"`
-	Address        string
-}
-
-// GetLabelValue returns a label's value (if exists).
-func (t *TiDBInfo) getLabelValue(key string) string {
-	for k, v := range t.getLabels() {
-		if strings.EqualFold(k, key) {
-			return v
-		}
-	}
-	return ""
-}
-
-// GetLabels returns the labels of the tidb.
-func (t *TiDBInfo) getLabels() map[string]string {
-	return t.Labels
-}
-
-// GetTiDB get TiDB info which registered in PD by address
-func GetTiDB(etcdClient *clientv3.Client, address string) (*TiDBInfo, error) {
-	key := fmt.Sprintf("/topology/tidb/%s/info", address)
-	resp, err := etcdutil.EtcdKVGet(etcdClient, key)
-	if err != nil {
-		return nil, err
-	}
-	if resp.Count < 1 {
-		err := fmt.Errorf("resp loaded for tidb [%s] is empty", address)
-		return nil, err
-	}
-	tidb := &TiDBInfo{}
-	err = json.Unmarshal(resp.Kvs[0].Value, tidb)
-	if err != nil {
-		return nil, err
-	}
-	tidb.Address = address
-	return tidb, nil
-}
-
-const (
-	tidbTTLPatternStr = "/topology/tidb/.+/ttl"
-	tidbInfoPrefix    = "/topology/tidb/"
-)
-
-// GetTiDBs list TiDB register in PD
-func GetTiDBs(etcdClient *clientv3.Client) ([]*TiDBInfo, error) {
-	tidbTTLPattern, err := regexp.Compile(tidbTTLPatternStr)
-	if err != nil {
-		return nil, err
-	}
-	resps, err := etcdutil.EtcdKVGet(etcdClient, tidbInfoPrefix, clientv3.WithPrefix())
-	if err != nil {
-		return nil, err
-	}
-	tidbs := make([]*TiDBInfo, 0, resps.Count)
-	for _, resp := range resps.Kvs {
-		key := string(resp.Key)
-		if tidbTTLPattern.MatchString(key) {
-			address := key[len(tidbInfoPrefix) : len(key)-len("/ttl")]
-			// In order to avoid make "aaa/bbb" in "/topology/tidb/aaa/bbb/ttl" stored as tidb address
-			if !strings.Contains(address, "/") {
-				tidbs = append(tidbs, &TiDBInfo{
-					Address: address,
-				})
-			}
-		}
-	}
-	return tidbs, nil
 }

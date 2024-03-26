@@ -244,7 +244,7 @@ func (s *calculationTestSuite) TestGetTotalCPUUseTime(c *C) {
 			id:      3,
 		},
 	}
-	totalCPUUseTime, _ := getTotalCPUUseTime(querier, TiDB, instances, time.Now(), 0)
+	totalCPUUseTime, _ := getTotalCPUUseTime(querier, TiKV, instances, time.Now(), 0)
 	expected := mockResultValue * float64(len(instances))
 	c.Assert(math.Abs(expected-totalCPUUseTime) < 1e-6, IsTrue)
 }
@@ -265,7 +265,7 @@ func (s *calculationTestSuite) TestGetTotalCPUQuota(c *C) {
 			id:      3,
 		},
 	}
-	totalCPUQuota, _ := getTotalCPUQuota(querier, TiDB, instances, time.Now())
+	totalCPUQuota, _ := getTotalCPUQuota(querier, TiKV, instances, time.Now())
 	expected := uint64(mockResultValue * float64(len(instances)*milliCores))
 	c.Assert(totalCPUQuota, Equals, expected)
 }
@@ -279,15 +279,6 @@ func (s *calculationTestSuite) TestScaleOutGroupLabel(c *C) {
             "cpu_rule":{
                 "max_threshold":0.8,
                 "min_threshold":0.2,
-                "resource_types":["resource_a"]
-            }
-        },
-        {
-            "component":"tidb",
-            "cpu_rule":{
-                "max_threshold":0.8,
-                "min_threshold":0.2,
-                "max_count":2,
                 "resource_types":["resource_a"]
             }
         }
@@ -307,8 +298,6 @@ func (s *calculationTestSuite) TestScaleOutGroupLabel(c *C) {
 	c.Assert(err, IsNil)
 	plan := findBestGroupToScaleOut(strategy, nil, TiKV)
 	c.Assert(plan.Labels["specialUse"], Equals, "hotRegion")
-	plan = findBestGroupToScaleOut(strategy, nil, TiDB)
-	c.Assert(plan.Labels["specialUse"], Equals, "")
 }
 
 func (s *calculationTestSuite) TestStrategyChangeCount(c *C) {
