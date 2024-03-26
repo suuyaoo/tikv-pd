@@ -48,7 +48,6 @@ import (
 	"github.com/tikv/pd/server/cluster"
 	"github.com/tikv/pd/server/config"
 	"github.com/tikv/pd/server/core"
-	"github.com/tikv/pd/server/encryptionkm"
 	"github.com/tikv/pd/server/id"
 	"github.com/tikv/pd/server/kv"
 	"github.com/tikv/pd/server/member"
@@ -119,8 +118,6 @@ type Server struct {
 	// store, region and peer, because we just need
 	// a unique ID.
 	idAllocator id.Allocator
-	// for encryption
-	encryptionKeyManager *encryptionkm.KeyManager
 	// for storage operation.
 	storage *core.Storage
 	// for basicCluster operation.
@@ -377,14 +374,9 @@ func (s *Server) startServer(ctx context.Context) error {
 			return err
 		}
 	}
-	encryptionKeyManager, err := encryptionkm.NewKeyManager(s.client, &s.cfg.Security.Encryption)
-	if err != nil {
-		return err
-	}
-	s.encryptionKeyManager = encryptionKeyManager
 	kvBase := kv.NewEtcdKVBase(s.client, s.rootPath)
 	path := filepath.Join(s.cfg.DataDir, "region-meta")
-	regionStorage, err := core.NewRegionStorage(ctx, path, encryptionKeyManager)
+	regionStorage, err := core.NewRegionStorage(ctx, path)
 	if err != nil {
 		return err
 	}
@@ -392,7 +384,6 @@ func (s *Server) startServer(ctx context.Context) error {
 	s.storage = core.NewStorage(
 		kvBase,
 		core.WithRegionStorage(regionStorage),
-		core.WithEncryptionKeyManager(encryptionKeyManager),
 	)
 	s.basicCluster = core.NewBasicCluster()
 	s.cluster = cluster.NewRaftCluster(ctx, s.GetClusterRootPath(), s.clusterID, syncer.NewRegionSyncer(s), s.client, s.httpClient)
@@ -400,7 +391,7 @@ func (s *Server) startServer(ctx context.Context) error {
 	// initial hot_region_storage in here.
 	hotRegionPath := filepath.Join(s.cfg.DataDir, "hot-region")
 	s.hotRegionStorage, err = core.NewHotRegionsStorage(
-		ctx, hotRegionPath, encryptionKeyManager, s.handler)
+		ctx, hotRegionPath, s.handler)
 	if err != nil {
 		return err
 	}
@@ -519,7 +510,6 @@ func (s *Server) startServerLoop(ctx context.Context) {
 	go s.etcdLeaderLoop()
 	go s.serverMetricsLoop()
 	go s.tsoAllocatorLoop()
-	go s.encryptionKeyManagerLoop()
 }
 
 func (s *Server) stopServerLoop() {
@@ -553,17 +543,6 @@ func (s *Server) tsoAllocatorLoop() {
 	defer cancel()
 	s.tsoAllocatorManager.AllocatorDaemon(ctx)
 	log.Info("server is closed, exit allocator loop")
-}
-
-// encryptionKeyManagerLoop is used to start monitor encryption key changes.
-func (s *Server) encryptionKeyManagerLoop() {
-	defer logutil.LogPanic()
-	defer s.serverLoopWg.Done()
-
-	ctx, cancel := context.WithCancel(s.serverLoopCtx)
-	defer cancel()
-	s.encryptionKeyManager.StartBackgroundLoop(ctx)
-	log.Info("server is closed, exist encryption key manager loop")
 }
 
 func (s *Server) collectEtcdStateMetrics() {
@@ -1277,11 +1256,6 @@ func (s *Server) campaignLeader() {
 
 	if err := s.persistOptions.LoadTTLFromEtcd(s.ctx, s.client); err != nil {
 		log.Error("failed to load persistOptions from etcd", errs.ZapError(err))
-		return
-	}
-
-	if err := s.encryptionKeyManager.SetLeadership(s.member.GetLeadership()); err != nil {
-		log.Error("failed to initialize encryption", errs.ZapError(err))
 		return
 	}
 

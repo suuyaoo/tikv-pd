@@ -24,15 +24,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pingcap/kvproto/pkg/encryptionpb"
 	"github.com/pingcap/kvproto/pkg/metapb"
 	"github.com/pingcap/log"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 	"github.com/syndtr/goleveldb/leveldb/util"
-	"github.com/tikv/pd/pkg/encryption"
 	"github.com/tikv/pd/pkg/errs"
-	"github.com/tikv/pd/server/encryptionkm"
 	"github.com/tikv/pd/server/kv"
 	"go.uber.org/zap"
 )
@@ -43,7 +40,6 @@ import (
 // Close must be called after use.
 type HotRegionStorage struct {
 	*kv.LeveldbKV
-	encryptionKeyManager    *encryptionkm.KeyManager
 	hotRegionLoopWg         sync.WaitGroup
 	batchHotInfo            map[string]*HistoryHotRegion
 	hotRegionInfoCtx        context.Context
@@ -77,11 +73,6 @@ type HistoryHotRegion struct {
 	QueryRate     float64 `json:"query_rate"`
 	StartKey      string  `json:"start_key"`
 	EndKey        string  `json:"end_key"`
-	// Encryption metadata for start_key and end_key. encryption_meta.iv is IV for start_key.
-	// IV for end_key is calculated from (encryption_meta.iv + len(start_key)).
-	// The field is only used by PD and should be ignored otherwise.
-	// If encryption_meta is empty (i.e. nil), it means start_key and end_key are unencrypted.
-	EncryptionMeta *encryptionpb.EncryptionMeta `json:"encryption_meta,omitempty"`
 }
 
 // HotRegionStorageHandler help hot region storage get hot region info.
@@ -133,7 +124,6 @@ func (h HotRegionType) String() string {
 func NewHotRegionsStorage(
 	ctx context.Context,
 	path string,
-	encryptionKeyManager *encryptionkm.KeyManager,
 	hotRegionStorageHandler HotRegionStorageHandler,
 ) (*HotRegionStorage, error) {
 	levelDB, err := kv.NewLeveldbKV(path)
@@ -143,7 +133,6 @@ func NewHotRegionsStorage(
 	hotRegionInfoCtx, hotRegionInfoCancle := context.WithCancel(ctx)
 	h := HotRegionStorage{
 		LeveldbKV:               levelDB,
-		encryptionKeyManager:    encryptionKeyManager,
 		batchHotInfo:            make(map[string]*HistoryHotRegion),
 		hotRegionInfoCtx:        hotRegionInfoCtx,
 		hotRegionInfoCancel:     hotRegionInfoCancle,
@@ -235,8 +224,7 @@ func (h *HotRegionStorage) NewIterator(requireTypes []string, startTime, endTime
 		iters[index] = iter
 	}
 	return HotRegionStorageIterator{
-		iters:                iters,
-		encryptionKeyManager: h.encryptionKeyManager,
+		iters: iters,
 	}
 }
 
@@ -269,14 +257,9 @@ func (h *HotRegionStorage) pullHotRegionInfo() error {
 func (h *HotRegionStorage) packHistoryHotRegions(historyHotRegions []HistoryHotRegion, hotRegionType string) error {
 	for i := range historyHotRegions {
 		region := &metapb.Region{
-			Id:             historyHotRegions[i].RegionID,
-			StartKey:       HexRegionKey([]byte(historyHotRegions[i].StartKey)),
-			EndKey:         HexRegionKey([]byte(historyHotRegions[i].EndKey)),
-			EncryptionMeta: historyHotRegions[i].EncryptionMeta,
-		}
-		region, err := encryption.EncryptRegion(region, h.encryptionKeyManager)
-		if err != nil {
-			return err
+			Id:       historyHotRegions[i].RegionID,
+			StartKey: HexRegionKey([]byte(historyHotRegions[i].StartKey)),
+			EndKey:   HexRegionKey([]byte(historyHotRegions[i].EndKey)),
 		}
 		historyHotRegions[i].StartKey = String(region.StartKey)
 		historyHotRegions[i].EndKey = String(region.EndKey)
@@ -363,8 +346,7 @@ func (h *HotRegionStorage) delete(reservedDays int) error {
 
 // HotRegionStorageIterator iterates over a historyHotRegion.
 type HotRegionStorageIterator struct {
-	iters                []iterator.Iterator
-	encryptionKeyManager *encryptionkm.KeyManager
+	iters []iterator.Iterator
 }
 
 // Next moves the iterator to the next key/value pair.
@@ -389,17 +371,12 @@ func (it *HotRegionStorageIterator) Next() (*HistoryHotRegion, error) {
 		return nil, err
 	}
 	region := &metapb.Region{
-		Id:             message.RegionID,
-		StartKey:       []byte(message.StartKey),
-		EndKey:         []byte(message.EndKey),
-		EncryptionMeta: message.EncryptionMeta,
-	}
-	if err := encryption.DecryptRegion(region, it.encryptionKeyManager); err != nil {
-		return nil, err
+		Id:       message.RegionID,
+		StartKey: []byte(message.StartKey),
+		EndKey:   []byte(message.EndKey),
 	}
 	message.StartKey = String(region.StartKey)
 	message.EndKey = String(region.EndKey)
-	message.EncryptionMeta = nil
 	return &message, nil
 }
 

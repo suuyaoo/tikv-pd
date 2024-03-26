@@ -286,28 +286,6 @@ var (
 	ErrInitLogger = errors.Normalize("init logger error", errors.RFCCodeText("PD:log:ErrInitLogger"))
 )
 
-// encryption
-var (
-	ErrEncryptionInvalidMethod      = errors.Normalize("invalid encryption method", errors.RFCCodeText("PD:encryption:ErrEncryptionInvalidMethod"))
-	ErrEncryptionInvalidConfig      = errors.Normalize("invalid config", errors.RFCCodeText("PD:encryption:ErrEncryptionInvalidConfig"))
-	ErrEncryptionGenerateIV         = errors.Normalize("fail to generate iv", errors.RFCCodeText("PD:encryption:ErrEncryptionGenerateIV"))
-	ErrEncryptionGCMEncrypt         = errors.Normalize("GCM encryption fail", errors.RFCCodeText("PD:encryption:ErrEncryptionGCMEncrypt"))
-	ErrEncryptionGCMDecrypt         = errors.Normalize("GCM decryption fail", errors.RFCCodeText("PD:encryption:ErrEncryptionGCMDecrypt"))
-	ErrEncryptionCTREncrypt         = errors.Normalize("CTR encryption fail", errors.RFCCodeText("PD:encryption:ErrEncryptionCTREncrypt"))
-	ErrEncryptionCTRDecrypt         = errors.Normalize("CTR decryption fail", errors.RFCCodeText("PD:encryption:ErrEncryptionCTRDecrypt"))
-	ErrEncryptionEncryptRegion      = errors.Normalize("encrypt region fail", errors.RFCCodeText("PD:encryption:ErrEncryptionEncryptRegion"))
-	ErrEncryptionDecryptRegion      = errors.Normalize("decrypt region fail", errors.RFCCodeText("PD:encryption:ErrEncryptionDecryptRegion"))
-	ErrEncryptionNewDataKey         = errors.Normalize("fail to generate data key", errors.RFCCodeText("PD:encryption:ErrEncryptionNewDataKey"))
-	ErrEncryptionNewMasterKey       = errors.Normalize("fail to get master key", errors.RFCCodeText("PD:encryption:ErrEncryptionNewMasterKey"))
-	ErrEncryptionCurrentKeyNotFound = errors.Normalize("current data key not found", errors.RFCCodeText("PD:encryption:ErrEncryptionCurrentKeyNotFound"))
-	ErrEncryptionKeyNotFound        = errors.Normalize("data key not found", errors.RFCCodeText("PD:encryption:ErrEncryptionKeyNotFound"))
-	ErrEncryptionKeysWatcher        = errors.Normalize("data key watcher error", errors.RFCCodeText("PD:encryption:ErrEncryptionKeysWatcher"))
-	ErrEncryptionLoadKeys           = errors.Normalize("load data keys error", errors.RFCCodeText("PD:encryption:ErrEncryptionLoadKeys"))
-	ErrEncryptionRotateDataKey      = errors.Normalize("failed to rotate data key", errors.RFCCodeText("PD:encryption:ErrEncryptionRotateDataKey"))
-	ErrEncryptionSaveDataKeys       = errors.Normalize("failed to save data keys", errors.RFCCodeText("PD:encryption:ErrEncryptionSaveDataKeys"))
-	ErrEncryptionKMS                = errors.Normalize("KMS error", errors.RFCCodeText("PD:ErrEncryptionKMS"))
-)
-
 // crypto
 var (
 	ErrCryptoX509KeyPair        = errors.Normalize("x509 keypair error", errors.RFCCodeText("PD:crypto:ErrCryptoX509KeyPair"))

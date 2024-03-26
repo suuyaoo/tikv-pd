@@ -28,7 +28,6 @@ import (
 	"github.com/pingcap/kvproto/pkg/metapb"
 	"github.com/pingcap/kvproto/pkg/pdpb"
 	"github.com/pingcap/log"
-	"github.com/tikv/pd/pkg/encryption"
 	"github.com/tikv/pd/pkg/errs"
 	"github.com/tikv/pd/server/cluster"
 	"github.com/tikv/pd/server/config"
@@ -195,7 +194,7 @@ func (h *Handler) GetHotRegionsWriteInterval() time.Duration {
 	return h.opt.GetHotRegionsWriteInterval()
 }
 
-//  GetHotRegionsReservedDays gets days hot region information is kept.
+// GetHotRegionsReservedDays gets days hot region information is kept.
 func (h *Handler) GetHotRegionsReservedDays() uint64 {
 	return h.opt.GetHotRegionsReservedDays()
 }
@@ -987,10 +986,6 @@ func (h *Handler) packHotRegions(hotPeersStat statistics.StoreHotPeersStat, hotR
 				continue
 			}
 			meta := region.GetMeta()
-			meta, err := encryption.EncryptRegion(meta, h.s.encryptionKeyManager)
-			if err != nil {
-				return nil, err
-			}
 			var peerID uint64
 			var isLearner bool
 			for _, peer := range meta.Peers {
@@ -1002,20 +997,19 @@ func (h *Handler) packHotRegions(hotPeersStat statistics.StoreHotPeersStat, hotR
 			}
 			stat := core.HistoryHotRegion{
 				// store in ms.
-				UpdateTime:     hotPeerStat.LastUpdateTime.UnixNano() / int64(time.Millisecond),
-				RegionID:       hotPeerStat.RegionID,
-				StoreID:        hotPeerStat.StoreID,
-				PeerID:         peerID,
-				IsLeader:       peerID == region.GetLeader().Id,
-				IsLearner:      isLearner,
-				HotDegree:      int64(hotPeerStat.HotDegree),
-				FlowBytes:      hotPeerStat.ByteRate,
-				KeyRate:        hotPeerStat.KeyRate,
-				QueryRate:      hotPeerStat.QueryRate,
-				StartKey:       string(region.GetStartKey()),
-				EndKey:         string(region.GetEndKey()),
-				EncryptionMeta: meta.GetEncryptionMeta(),
-				HotRegionType:  hotRegionType,
+				UpdateTime:    hotPeerStat.LastUpdateTime.UnixNano() / int64(time.Millisecond),
+				RegionID:      hotPeerStat.RegionID,
+				StoreID:       hotPeerStat.StoreID,
+				PeerID:        peerID,
+				IsLeader:      peerID == region.GetLeader().Id,
+				IsLearner:     isLearner,
+				HotDegree:     int64(hotPeerStat.HotDegree),
+				FlowBytes:     hotPeerStat.ByteRate,
+				KeyRate:       hotPeerStat.KeyRate,
+				QueryRate:     hotPeerStat.QueryRate,
+				StartKey:      string(region.GetStartKey()),
+				EndKey:        string(region.GetEndKey()),
+				HotRegionType: hotRegionType,
 			}
 			historyHotRegions = append(historyHotRegions, stat)
 		}

@@ -37,7 +37,7 @@ func (t *testClientSuite) TestLoadRegion(c *C) {
 	tempDir, err := os.MkdirTemp(os.TempDir(), "region_syncer_load_region")
 	c.Assert(err, IsNil)
 	defer os.RemoveAll(tempDir)
-	rs, err := core.NewRegionStorage(context.Background(), tempDir, nil)
+	rs, err := core.NewRegionStorage(context.Background(), tempDir)
 	c.Assert(err, IsNil)
 
 	server := &mockServer{

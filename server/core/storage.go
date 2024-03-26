@@ -30,9 +30,7 @@ import (
 	"github.com/pingcap/errors"
 	"github.com/pingcap/kvproto/pkg/metapb"
 	"github.com/pingcap/log"
-	"github.com/tikv/pd/pkg/encryption"
 	"github.com/tikv/pd/pkg/errs"
-	"github.com/tikv/pd/server/encryptionkm"
 	"github.com/tikv/pd/server/kv"
 	"go.etcd.io/etcd/clientv3"
 )
@@ -48,7 +46,6 @@ const (
 	replicationPath            = "replication_mode"
 	componentPath              = "component"
 	customScheduleConfigPath   = "scheduler_config"
-	encryptionKeysPath         = "encryption_keys"
 	gcWorkerServiceSafePointID = "gc_worker"
 )
 
@@ -60,17 +57,15 @@ const (
 // Storage wraps all kv operations, keep it stateless.
 type Storage struct {
 	kv.Base
-	regionStorage        *RegionStorage
-	encryptionKeyManager *encryptionkm.KeyManager
-	useRegionStorage     int32
-	regionLoaded         int32
-	mu                   sync.Mutex
+	regionStorage    *RegionStorage
+	useRegionStorage int32
+	regionLoaded     int32
+	mu               sync.Mutex
 }
 
 // StorageOpt represents available options to create Storage.
 type StorageOpt struct {
-	regionStorage        *RegionStorage
-	encryptionKeyManager *encryptionkm.KeyManager
+	regionStorage *RegionStorage
 }
 
 // StorageOption configures StorageOpt
@@ -83,13 +78,6 @@ func WithRegionStorage(regionStorage *RegionStorage) StorageOption {
 	}
 }
 
-// WithEncryptionKeyManager sets EncryptionManager to the Storage
-func WithEncryptionKeyManager(encryptionKeyManager *encryptionkm.KeyManager) StorageOption {
-	return func(opt *StorageOpt) {
-		opt.encryptionKeyManager = encryptionKeyManager
-	}
-}
-
 // NewStorage creates Storage instance with Base.
 func NewStorage(base kv.Base, opts ...StorageOption) *Storage {
 	options := &StorageOpt{}
@@ -97,9 +85,8 @@ func NewStorage(base kv.Base, opts ...StorageOption) *Storage {
 		opt(options)
 	}
 	return &Storage{
-		Base:                 base,
-		regionStorage:        options.regionStorage,
-		encryptionKeyManager: options.encryptionKeyManager,
+		Base:          base,
+		regionStorage: options.regionStorage,
 	}
 }
 
@@ -137,11 +124,6 @@ func (s *Storage) storeLeaderWeightPath(storeID uint64) string {
 
 func (s *Storage) storeRegionWeightPath(storeID uint64) string {
 	return path.Join(schedulePath, "store_weight", fmt.Sprintf("%020d", storeID), "region")
-}
-
-// EncryptionKeysPath returns the path to save encryption keys.
-func (s *Storage) EncryptionKeysPath() string {
-	return path.Join(encryptionKeysPath, "keys")
 }
 
 // SaveScheduleConfig saves the config of scheduler.
@@ -184,28 +166,28 @@ func (s *Storage) DeleteStore(store *metapb.Store) error {
 // LoadRegion loads one region from storage.
 func (s *Storage) LoadRegion(regionID uint64, region *metapb.Region) (ok bool, err error) {
 	if atomic.LoadInt32(&s.useRegionStorage) > 0 {
-		return loadRegion(s.regionStorage, s.encryptionKeyManager, regionID, region)
+		return loadRegion(s.regionStorage, regionID, region)
 	}
-	return loadRegion(s.Base, s.encryptionKeyManager, regionID, region)
+	return loadRegion(s.Base, regionID, region)
 }
 
 // LoadRegions loads all regions from storage to RegionsInfo.
 func (s *Storage) LoadRegions(ctx context.Context, f func(region *RegionInfo) []*RegionInfo) error {
 	if atomic.LoadInt32(&s.useRegionStorage) > 0 {
-		return loadRegions(ctx, s.regionStorage, s.encryptionKeyManager, f)
+		return loadRegions(ctx, s.regionStorage, f)
 	}
-	return loadRegions(ctx, s.Base, s.encryptionKeyManager, f)
+	return loadRegions(ctx, s.Base, f)
 }
 
 // LoadRegionsOnce loads all regions from storage to RegionsInfo.Only load one time from regionStorage.
 func (s *Storage) LoadRegionsOnce(ctx context.Context, f func(region *RegionInfo) []*RegionInfo) error {
 	if atomic.LoadInt32(&s.useRegionStorage) == 0 {
-		return loadRegions(ctx, s.Base, s.encryptionKeyManager, f)
+		return loadRegions(ctx, s.Base, f)
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.regionLoaded == 0 {
-		if err := loadRegions(ctx, s.regionStorage, s.encryptionKeyManager, f); err != nil {
+		if err := loadRegions(ctx, s.regionStorage, f); err != nil {
 			return err
 		}
 		s.regionLoaded = 1
@@ -218,7 +200,7 @@ func (s *Storage) SaveRegion(region *metapb.Region) error {
 	if atomic.LoadInt32(&s.useRegionStorage) > 0 {
 		return s.regionStorage.SaveRegion(region)
 	}
-	return saveRegion(s.Base, s.encryptionKeyManager, region)
+	return saveRegion(s.Base, region)
 }
 
 // DeleteRegion deletes one region from storage.
@@ -643,7 +625,6 @@ func saveProto(s kv.Base, key string, msg proto.Message) error {
 
 func loadRegion(
 	kv kv.Base,
-	encryptionKeyManager *encryptionkm.KeyManager,
 	regionID uint64,
 	region *metapb.Region,
 ) (ok bool, err error) {
@@ -658,19 +639,13 @@ func loadRegion(
 	if err != nil {
 		return true, errs.ErrProtoUnmarshal.Wrap(err).GenWithStackByArgs()
 	}
-	err = encryption.DecryptRegion(region, encryptionKeyManager)
 	return true, err
 }
 
 func saveRegion(
 	kv kv.Base,
-	encryptionKeyManager *encryptionkm.KeyManager,
 	region *metapb.Region,
 ) error {
-	region, err := encryption.EncryptRegion(region, encryptionKeyManager)
-	if err != nil {
-		return err
-	}
 	value, err := proto.Marshal(region)
 	if err != nil {
 		return errs.ErrProtoMarshal.Wrap(err).GenWithStackByArgs()

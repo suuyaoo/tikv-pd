@@ -23,9 +23,7 @@ import (
 	"github.com/pingcap/failpoint"
 	"github.com/pingcap/kvproto/pkg/metapb"
 	"github.com/pingcap/log"
-	"github.com/tikv/pd/pkg/encryption"
 	"github.com/tikv/pd/pkg/errs"
-	"github.com/tikv/pd/server/encryptionkm"
 	"github.com/tikv/pd/server/kv"
 )
 
@@ -34,15 +32,14 @@ var dirtyFlushTick = time.Second
 // RegionStorage is used to save regions.
 type RegionStorage struct {
 	*kv.LeveldbKV
-	encryptionKeyManager *encryptionkm.KeyManager
-	mu                   sync.RWMutex
-	batchRegions         map[string]*metapb.Region
-	batchSize            int
-	cacheSize            int
-	flushRate            time.Duration
-	flushTime            time.Time
-	regionStorageCtx     context.Context
-	regionStorageCancel  context.CancelFunc
+	mu                  sync.RWMutex
+	batchRegions        map[string]*metapb.Region
+	batchSize           int
+	cacheSize           int
+	flushRate           time.Duration
+	flushTime           time.Time
+	regionStorageCtx    context.Context
+	regionStorageCancel context.CancelFunc
 }
 
 const (
@@ -56,7 +53,6 @@ const (
 func NewRegionStorage(
 	ctx context.Context,
 	path string,
-	encryptionKeyManager *encryptionkm.KeyManager,
 ) (*RegionStorage, error) {
 	levelDB, err := kv.NewLeveldbKV(path)
 	if err != nil {
@@ -64,14 +60,13 @@ func NewRegionStorage(
 	}
 	regionStorageCtx, regionStorageCancel := context.WithCancel(ctx)
 	s := &RegionStorage{
-		LeveldbKV:            levelDB,
-		encryptionKeyManager: encryptionKeyManager,
-		batchSize:            defaultBatchSize,
-		flushRate:            defaultFlushRegionRate,
-		batchRegions:         make(map[string]*metapb.Region, defaultBatchSize),
-		flushTime:            time.Now().Add(defaultFlushRegionRate),
-		regionStorageCtx:     regionStorageCtx,
-		regionStorageCancel:  regionStorageCancel,
+		LeveldbKV:           levelDB,
+		batchSize:           defaultBatchSize,
+		flushRate:           defaultFlushRegionRate,
+		batchRegions:        make(map[string]*metapb.Region, defaultBatchSize),
+		flushTime:           time.Now().Add(defaultFlushRegionRate),
+		regionStorageCtx:    regionStorageCtx,
+		regionStorageCancel: regionStorageCancel,
 	}
 	go s.backgroundFlush()
 	return s, nil
@@ -107,10 +102,6 @@ func (s *RegionStorage) backgroundFlush() {
 
 // SaveRegion saves one region to storage.
 func (s *RegionStorage) SaveRegion(region *metapb.Region) error {
-	region, err := encryption.EncryptRegion(region, s.encryptionKeyManager)
-	if err != nil {
-		return err
-	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.cacheSize < s.batchSize-1 {
@@ -121,7 +112,7 @@ func (s *RegionStorage) SaveRegion(region *metapb.Region) error {
 		return nil
 	}
 	s.batchRegions[regionPath(region.GetId())] = region
-	err = s.flush()
+	err := s.flush()
 
 	if err != nil {
 		return err
@@ -136,7 +127,6 @@ func deleteRegion(kv kv.Base, region *metapb.Region) error {
 func loadRegions(
 	ctx context.Context,
 	kv kv.Base,
-	encryptionKeyManager *encryptionkm.KeyManager,
 	f func(region *RegionInfo) []*RegionInfo,
 ) error {
 	nextID := uint64(0)
@@ -169,9 +159,6 @@ func loadRegions(
 			region := &metapb.Region{}
 			if err := region.Unmarshal([]byte(s)); err != nil {
 				return errs.ErrProtoUnmarshal.Wrap(err).GenWithStackByArgs()
-			}
-			if err = encryption.DecryptRegion(region, encryptionKeyManager); err != nil {
-				return err
 			}
 
 			nextID = region.GetId() + 1

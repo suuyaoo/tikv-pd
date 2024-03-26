@@ -27,7 +27,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/tikv/pd/pkg/encryption"
 	"github.com/tikv/pd/pkg/errs"
 	"github.com/tikv/pd/pkg/grpcutil"
 	"github.com/tikv/pd/pkg/logutil"
@@ -626,8 +625,6 @@ func (c *Config) Adjust(meta *toml.MetaData, reloading bool) error {
 	c.Dashboard.adjust(configMetaData.Child("dashboard"))
 
 	c.ReplicationMode.adjust(configMetaData.Child("replication-mode"))
-
-	c.Security.Encryption.Adjust()
 
 	return nil
 }
@@ -1418,6 +1415,5 @@ func (c *DRAutoSyncReplicationConfig) adjust(meta *configMetaData) {
 type SecurityConfig struct {
 	grpcutil.TLSConfig
 	// RedactInfoLog indicates that whether enabling redact log
-	RedactInfoLog bool              `toml:"redact-info-log" json:"redact-info-log"`
-	Encryption    encryption.Config `toml:"encryption" json:"encryption"`
+	RedactInfoLog bool `toml:"redact-info-log" json:"redact-info-log"`
 }

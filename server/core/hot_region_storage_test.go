@@ -297,14 +297,11 @@ func newTestHotRegionStorage(pullInterval time.Duration,
 	clear func(), err error) {
 	writePath := "./tmp"
 	ctx := context.Background()
-	if err != nil {
-		return nil, nil, err
-	}
 	packHotRegionInfo.pullInterval = pullInterval
 	packHotRegionInfo.reservedDays = reservedDays
 	// delete data in between today and tomrrow
 	hotRegionStorage, err = NewHotRegionsStorage(ctx,
-		writePath, nil, packHotRegionInfo)
+		writePath, packHotRegionInfo)
 	if err != nil {
 		return nil, nil, err
 	}
