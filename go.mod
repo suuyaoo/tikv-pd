@@ -96,7 +96,6 @@ require (
 	github.com/google/pprof v0.0.0-20211122183932-1daafda22083 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/google/uuid v1.0.0 // indirect
-	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.0.1-0.20190118093823-f849b5445de4 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.12.1 // indirect
 	github.com/gtank/cryptopasta v0.0.0-20170601214702-1f550f6f2f69 // indirect
@@ -140,7 +139,6 @@ require (
 	github.com/thoas/go-funk v0.8.0 // indirect
 	github.com/tklauser/go-sysconf v0.3.4 // indirect
 	github.com/tklauser/numcpus v0.2.1 // indirect
-	github.com/tmc/grpc-websocket-proxy v0.0.0-20200427203606-3cfed13b9966 // indirect
 	github.com/ugorji/go/codec v1.1.7 // indirect
 	github.com/urfave/cli/v2 v2.1.1 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.3.5 // indirect
@@ -172,3 +170,5 @@ require (
 	moul.io/zapgorm2 v1.1.0 // indirect
 	sigs.k8s.io/yaml v1.1.0 // indirect
 )
+
+replace go.etcd.io/etcd => github.com/suuyaoo/etcd v0.34.28-0.20240410135916-443550e8f555

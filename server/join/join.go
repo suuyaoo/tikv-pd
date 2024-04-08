@@ -28,6 +28,7 @@ import (
 	"github.com/tikv/pd/pkg/etcdutil"
 	"github.com/tikv/pd/server/config"
 	"go.etcd.io/etcd/clientv3"
+	"go.etcd.io/etcd/clientv3/concurrency"
 	"go.etcd.io/etcd/embed"
 	"go.uber.org/zap"
 )
@@ -46,8 +47,9 @@ var listMemberRetryTimes = 20
 // and returns the initial configuration of the PD cluster.
 //
 // TL;TR: The join functionality is safe. With data, join does nothing, w/o data
-//        and it is not a member of cluster, join does MemberAdd, it returns an
-//        error if PD tries to join itself, missing data or join a duplicated PD.
+//
+//	and it is not a member of cluster, join does MemberAdd, it returns an
+//	error if PD tries to join itself, missing data or join a duplicated PD.
 //
 // Etcd automatically re-joins the cluster if there is a data directory. So
 // first it checks if there is a data directory or not. If there is, it returns
@@ -56,29 +58,29 @@ var listMemberRetryTimes = 20
 //
 // If there is no data directory, there are following cases:
 //
-//  - A new PD joins an existing cluster.
-//      What join does: MemberAdd, MemberList, then generate initial-cluster.
+//   - A new PD joins an existing cluster.
+//     What join does: MemberAdd, MemberList, then generate initial-cluster.
 //
-//  - A failed PD re-joins the previous cluster.
-//      What join does: return an error. (etcd reports: raft log corrupted,
-//                      truncated, or lost?)
+//   - A failed PD re-joins the previous cluster.
+//     What join does: return an error. (etcd reports: raft log corrupted,
+//     truncated, or lost?)
 //
-//  - A deleted PD joins to previous cluster.
-//      What join does: MemberAdd, MemberList, then generate initial-cluster.
-//                      (it is not in the member list and there is no data, so
-//                       we can treat it as a new PD.)
+//   - A deleted PD joins to previous cluster.
+//     What join does: MemberAdd, MemberList, then generate initial-cluster.
+//     (it is not in the member list and there is no data, so
+//     we can treat it as a new PD.)
 //
 // If there is a data directory, there are following special cases:
 //
-//  - A failed PD tries to join the previous cluster but it has been deleted
-//    during its downtime.
-//      What join does: return "" (etcd will connect to other peers and find
-//                      that the PD itself has been removed.)
+//   - A failed PD tries to join the previous cluster but it has been deleted
+//     during its downtime.
+//     What join does: return "" (etcd will connect to other peers and find
+//     that the PD itself has been removed.)
 //
-//  - A deleted PD joins the previous cluster.
-//      What join does: return "" (as etcd will read data directory and find
-//                      that the PD itself has been removed, so an empty string
-//                      is fine.)
+//   - A deleted PD joins the previous cluster.
+//     What join does: return "" (as etcd will read data directory and find
+//     that the PD itself has been removed, so an empty string
+//     is fine.)
 func PrepareJoinCluster(cfg *config.Config) error {
 	// - A PD tries to join itself.
 	if cfg.Join == "" {
@@ -88,6 +90,9 @@ func PrepareJoinCluster(cfg *config.Config) error {
 	if cfg.Join == cfg.AdvertiseClientUrls {
 		return errors.New("join self is forbidden")
 	}
+
+	log.Info("prepare join cluster",
+		zap.String("join", cfg.Join))
 
 	filePath := path.Join(cfg.DataDir, "join")
 	// Read the persist join config
@@ -127,20 +132,68 @@ func PrepareJoinCluster(cfg *config.Config) error {
 	}
 	defer client.Close()
 
+	// lock for pd join
+	session, err := concurrency.NewSession(client)
+	if err != nil {
+		return err
+	}
+	defer session.Close()
+
+	locker := concurrency.NewMutex(session, "/pd/join")
+	err = locker.Lock(client.Ctx())
+	if err != nil {
+		return nil
+	}
+	err = prepareJoinClusterLocked(cfg, client, filePath)
+	locker.Unlock(client.Ctx())
+
+	return err
+}
+
+func prepareJoinClusterLocked(cfg *config.Config, client *clientv3.Client, filePath string) error {
 	listResp, err := etcdutil.ListEtcdMembers(client)
 	if err != nil {
 		return err
 	}
 
+	needWaiting := false
+	for {
+		if needWaiting {
+			time.Sleep(500 * time.Millisecond)
+			listResp, err = etcdutil.ListEtcdMembers(client)
+			if err == nil {
+				needWaiting = false
+			} else {
+				log.Info("list etcd member fail", zap.Error(err))
+				continue
+			}
+		}
+		for _, m := range listResp.Members {
+			if len(m.Name) == 0 {
+				log.Info("there is a member that has not joined successfully")
+				needWaiting = true
+			}
+		}
+		if !needWaiting {
+			break
+		}
+	}
+
+	memberCount := 0
 	existed := false
 	for _, m := range listResp.Members {
-		if len(m.Name) == 0 {
-			return errors.New("there is a member that has not joined successfully")
-		}
 		if m.Name == cfg.Name {
 			existed = true
 		}
+		if !m.IsLearner {
+			memberCount++
+		}
 	}
+
+	log.Info("list etcd member info",
+		zap.Int("total count", len(listResp.Members)),
+		zap.Int("member count", memberCount),
+		zap.Bool("existed", existed))
 
 	// - A failed PD re-joins the previous cluster.
 	if existed {
@@ -155,11 +208,13 @@ func PrepareJoinCluster(cfg *config.Config) error {
 	})
 	// - A new PD joins an existing cluster.
 	// - A deleted PD joins to previous cluster.
-	{
-		// First adds member through the API
-		addResp, err = etcdutil.AddEtcdMember(client, []string{cfg.AdvertisePeerUrls})
+	for {
+		addResp, err = etcdutil.AddEtcdLearner(client, []string{cfg.AdvertisePeerUrls})
 		if err != nil {
-			return err
+			log.Warn("add etcd learner fail", zap.Error(err))
+			time.Sleep(1000 * time.Millisecond)
+		} else {
+			break
 		}
 	}
 	failpoint.Label("LabelSkipAddMember")
@@ -170,6 +225,8 @@ func PrepareJoinCluster(cfg *config.Config) error {
 	)
 
 	for i := 0; i < listMemberRetryTimes; i++ {
+		log.Info("check add etcd member result")
+
 		listResp, err = etcdutil.ListEtcdMembers(client)
 		if err != nil {
 			return err
@@ -199,7 +256,9 @@ func PrepareJoinCluster(cfg *config.Config) error {
 		return errors.Errorf("join failed, adds the new member %s may failed", cfg.Name)
 	}
 
-	initialCluster = strings.Join(pds, ",")
+	initialCluster := strings.Join(pds, ",")
+	log.Info("save initial cluster info",
+		zap.String("join", initialCluster))
 	cfg.InitialCluster = initialCluster
 	cfg.InitialClusterState = embed.ClusterStateFlagExisting
 	err = os.MkdirAll(cfg.DataDir, privateDirMode)

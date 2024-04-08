@@ -107,6 +107,22 @@ func RemoveEtcdMember(client *clientv3.Client, id uint64) (*clientv3.MemberRemov
 	return rmResp, errors.WithStack(err)
 }
 
+// AddEtcdLearner adds an etcd learner.
+func AddEtcdLearner(client *clientv3.Client, urls []string) (*clientv3.MemberAddResponse, error) {
+	ctx, cancel := context.WithTimeout(client.Ctx(), DefaultRequestTimeout)
+	addResp, err := client.MemberAddAsLearner(ctx, urls)
+	cancel()
+	return addResp, errors.WithStack(err)
+}
+
+// PromoteEtcdLearner promotes a learner by the given id.
+func PromoteEtcdLearner(client *clientv3.Client, id uint64) (*clientv3.MemberPromoteResponse, error) {
+	ctx, cancel := context.WithTimeout(client.Ctx(), DefaultRequestTimeout)
+	rmResp, err := client.MemberPromote(ctx, id)
+	cancel()
+	return rmResp, errors.WithStack(err)
+}
+
 // EtcdKVGet returns the etcd GetResponse by given key or key prefix
 func EtcdKVGet(c *clientv3.Client, key string, opts ...clientv3.OpOption) (*clientv3.GetResponse, error) {
 	ctx, cancel := context.WithTimeout(c.Ctx(), DefaultRequestTimeout)

@@ -297,6 +297,9 @@ func (s *Server) startEtcd(ctx context.Context) error {
 	}
 
 	endpoints := []string{s.etcdCfg.AdvertiseClientUrls[0].String()}
+	if etcd.Server.IsLearner() {
+		endpoints = strings.Split(s.cfg.Join, ",")
+	}
 	log.Info("create etcd v3 client", zap.Strings("endpoints", endpoints), zap.Reflect("cert", s.cfg.Security))
 
 	lgc := zap.NewProductionConfig()
@@ -312,7 +315,7 @@ func (s *Server) startEtcd(ctx context.Context) error {
 	}
 
 	etcdServerID := uint64(etcd.Server.ID())
-
+	etcdMemberCount := 0
 	// update advertise peer urls.
 	etcdMembers, err := etcdutil.ListEtcdMembers(client)
 	if err != nil {
@@ -325,6 +328,20 @@ func (s *Server) startEtcd(ctx context.Context) error {
 				log.Info("update advertise peer urls", zap.String("from", s.cfg.AdvertisePeerUrls), zap.String("to", etcdPeerURLs))
 				s.cfg.AdvertisePeerUrls = etcdPeerURLs
 			}
+		}
+		if !m.IsLearner {
+			etcdMemberCount += 1
+		}
+	}
+	if etcd.Server.IsLearner() && etcdMemberCount < 3 {
+		log.Info("promote etcd learner as member",
+			zap.Uint64("server id", etcdServerID))
+		_, err := etcdutil.PromoteEtcdLearner(client, etcdServerID)
+		if err != nil {
+			log.Info("promote etcd learner as member fail",
+				zap.Uint64("server id", etcdServerID),
+				zap.Error(err),
+			)
 		}
 	}
 	s.client = client
