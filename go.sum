@@ -516,8 +516,8 @@ github.com/stretchr/testify v1.8.1 h1:w7B6lhMri9wdJUVmEZPGGhZzrYTPvgJArz7wNPgYKs
 github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
 github.com/suuyaoo/etcd v0.34.28-0.20240410135916-443550e8f555 h1:0v8cf9460fExkPl1FTwMrx8p6Z0lH8sPEfBH/9p0wKQ=
 github.com/suuyaoo/etcd v0.34.28-0.20240410135916-443550e8f555/go.mod h1:LqihLF/IXb/G+G+NO6ckb61fypTb6GX99mPSztt+lkU=
-github.com/suuyaoo/tikv-kvproto v0.0.0-20240416104006-5de858b498dc h1:21Nm9rsZaIKx+krfZwgT9XSZsSMlsMQGMNpSLvF4YkE=
-github.com/suuyaoo/tikv-kvproto v0.0.0-20240416104006-5de858b498dc/go.mod h1:DJgeP2zpgL7LvAzuZBKYu3Cpcq5II+xN16lgri5brks=
+github.com/suuyaoo/tikv-kvproto v0.0.0-20240416144935-40786da7422c h1:CrKqAhJouuJAbsdzykIzG7svMYKm1DvndLrOF0pdhrE=
+github.com/suuyaoo/tikv-kvproto v0.0.0-20240416144935-40786da7422c/go.mod h1:DJgeP2zpgL7LvAzuZBKYu3Cpcq5II+xN16lgri5brks=
 github.com/swaggo/files v0.0.0-20190704085106-630677cd5c14 h1:PyYN9JH5jY9j6av01SpfRMb+1DWg/i3MbGOKPxJ2wjM=
 github.com/swaggo/files v0.0.0-20190704085106-630677cd5c14/go.mod h1:gxQT6pBGRuIGunNf/+tSOB5OHvguWi8Tbt82WOkf35E=
 github.com/swaggo/gin-swagger v1.2.0/go.mod h1:qlH2+W7zXGZkczuL+r2nEBR2JTT+/lX05Nn6vPhc7OI=

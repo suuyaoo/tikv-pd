@@ -1520,6 +1520,7 @@ func (c *RaftCluster) RegionWriteStats() map[uint64][]*statistics.HotPeerStat {
 
 // TODO: remove me.
 // only used in test.
+//
 //nolint:unused
 func (c *RaftCluster) putRegion(region *core.RegionInfo) error {
 	c.Lock()
@@ -1872,6 +1873,7 @@ func GetMembers(etcdClient *clientv3.Client) ([]*pdpb.Member, error) {
 			MemberId:   m.ID,
 			ClientUrls: m.ClientURLs,
 			PeerUrls:   m.PeerURLs,
+			IsLearner:  m.IsLearner,
 		}
 		members = append(members, info)
 	}
