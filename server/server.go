@@ -298,7 +298,14 @@ func (s *Server) startEtcd(ctx context.Context) error {
 
 	endpoints := []string{s.etcdCfg.AdvertiseClientUrls[0].String()}
 	if etcd.Server.IsLearner() {
+		memberEndpoints := []string{}
 		endpoints = strings.Split(s.cfg.Join, ",")
+		for _, endpoint := range endpoints {
+			if endpoint != s.etcdCfg.AdvertiseClientUrls[0].String() {
+				memberEndpoints = append(memberEndpoints, endpoint)
+			}
+		}
+		endpoints = memberEndpoints
 	}
 	log.Info("create etcd v3 client", zap.Strings("endpoints", endpoints), zap.Reflect("cert", s.cfg.Security))
 
@@ -342,6 +349,11 @@ func (s *Server) startEtcd(ctx context.Context) error {
 				zap.Uint64("server id", etcdServerID),
 				zap.Error(err),
 			)
+		} else {
+			log.Info("promote etcd learner as member ok",
+				zap.Uint64("server id", etcdServerID))
+			endpoints = append(endpoints, s.etcdCfg.AdvertiseClientUrls[0].String())
+			client.SetEndpoints(endpoints...)
 		}
 	}
 	s.client = client
