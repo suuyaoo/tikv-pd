@@ -182,6 +182,11 @@ func (ls *Leadership) Watch(serverCtx context.Context, revision int64) {
 	if ls == nil {
 		return
 	}
+	log.Info("start watch leader",
+		zap.String("leaderPath", ls.leaderKey),
+		zap.String("purpose", ls.purpose),
+		zap.Int64("revision", revision),
+	)
 	watcher := clientv3.NewWatcher(ls.client)
 	defer watcher.Close()
 	ctx, cancel := context.WithCancel(serverCtx)
@@ -192,6 +197,11 @@ func (ls *Leadership) Watch(serverCtx context.Context, revision int64) {
 	for {
 		failpoint.Inject("delayWatcher", nil)
 		rch := watcher.Watch(ctx, ls.leaderKey, clientv3.WithRev(revision))
+		log.Info("watch leader",
+			zap.String("leaderPath", ls.leaderKey),
+			zap.String("purpose", ls.purpose),
+			zap.Int64("revision", revision),
+		)
 		for wresp := range rch {
 			// meet compacted error, use the compact revision.
 			if wresp.CompactRevision != 0 {
