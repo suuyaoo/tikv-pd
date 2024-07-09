@@ -56,8 +56,6 @@
 ## Currently we use prometheus as metric storage, we may use PD/TiKV as metric storage later.
 ## For usability, recommended to temporarily set it to the prometheus address, eg: http://127.0.0.1:9090
 # metric-storage = ""
-## There are some values supported: "auto", "none", or a specific address, default: "auto".
-# dashboard-address = "auto"
 
 [schedule]
 ## Controls the size limit of Region Merge.
@@ -131,25 +129,3 @@
 
 ## Whether or not to enable placement rules.
 # enable-placement-rules = true
-
-[dashboard]
-## Configurations below are for the TiDB Dashboard embedded in the PD.
-
-## The path of the CA certificate used to verify the TiDB server in TLS.
-# tidb-cacert-path = ""
-## The path of the certificate used to connect to TiDB server in TLS.
-# tidb-cert-path = ""
-## The path of the certificate private key.
-# tidb-key-path = ""
-
-## The public path prefix to serve Dashboard URLs. It can be set when Dashboard
-## is running behind a reverse proxy. Do not configure it if you access
-## Dashboard directly.
-# public-path-prefix = "/dashboard"
-
-## When enabled, the request will be proxied to the instance running Dashboard
-## internally instead of result in a 307 redirection.
-# internal-proxy = false
-
-## When enabled, usage data will be sent to PingCAP for improving user experience.
-# enable-telemetry = true

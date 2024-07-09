@@ -942,17 +942,6 @@ func (s *Server) GetPDServerConfig() *config.PDServerConfig {
 
 // SetPDServerConfig sets the server config.
 func (s *Server) SetPDServerConfig(cfg config.PDServerConfig) error {
-	switch cfg.DashboardAddress {
-	case "auto":
-	case "none":
-	default:
-		if !strings.HasPrefix(cfg.DashboardAddress, "http") {
-			cfg.DashboardAddress = fmt.Sprintf("%s://%s", s.GetClientScheme(), cfg.DashboardAddress)
-		}
-		if !cluster.IsClientURL(cfg.DashboardAddress, s.client) {
-			return errors.Errorf("%s is not the client url of any member", cfg.DashboardAddress)
-		}
-	}
 	if err := cfg.Validate(); err != nil {
 		return err
 	}

@@ -11,11 +11,7 @@ vendor
 default*
 *.bak
 .vscode/
-/.dashboard_download_cache
-/.dashboard_build_temp
 /.tools/bin
-docs/swagger/*
-!docs/swagger/placeholder.go
 *.before
 covprofile
 coverage.tmp

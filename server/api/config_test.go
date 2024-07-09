@@ -297,7 +297,6 @@ func (s *testConfigSuite) TestConfigPDServer(c *C) {
 	c.Assert(sc.KeyType, Equals, "table")
 	c.Assert(sc.RuntimeServices, DeepEquals, typeutil.StringSlice([]string{}))
 	c.Assert(sc.MetricStorage, Equals, "")
-	c.Assert(sc.DashboardAddress, Equals, "auto")
 	c.Assert(sc.FlowRoundByDigit, Equals, int(3))
 	c.Assert(sc.MaxResetTSGap.Duration, Equals, 24*time.Hour)
 }

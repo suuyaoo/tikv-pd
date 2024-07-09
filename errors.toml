@@ -131,16 +131,6 @@ error = '''
 x509 keypair error
 '''
 
-["PD:dashboard:ErrDashboardStart"]
-error = '''
-start dashboard failed
-'''
-
-["PD:dashboard:ErrDashboardStop"]
-error = '''
-stop dashboard failed
-'''
-
 ["PD:dir:ErrReadDirName"]
 error = '''
 read dir name error

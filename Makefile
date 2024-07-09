@@ -48,16 +48,6 @@ ifneq "$(PD_EDITION)" "Enterprise"
 endif
 endif
 
-ifeq ($(SWAGGER), 1)
-	BUILD_TAGS += swagger_server
-endif
-
-ifeq ($(DASHBOARD), 0)
-	BUILD_TAGS += without_dashboard
-else
-	BUILD_CGO_ENABLED := 1
-endif
-
 ifeq ("$(WITH_RACE)", "1")
 	BUILD_FLAGS += -race
 	BUILD_CGO_ENABLED := 1
@@ -68,15 +58,6 @@ LDFLAGS += -X "$(PD_PKG)/server/versioninfo.PDBuildTS=$(shell date -u '+%Y-%m-%d
 LDFLAGS += -X "$(PD_PKG)/server/versioninfo.PDGitHash=$(shell git rev-parse HEAD)"
 LDFLAGS += -X "$(PD_PKG)/server/versioninfo.PDGitBranch=$(shell git rev-parse --abbrev-ref HEAD)"
 LDFLAGS += -X "$(PD_PKG)/server/versioninfo.PDEdition=$(PD_EDITION)"
-
-ifneq ($(DASHBOARD), 0)
-	# Note: LDFLAGS must be evaluated lazily for these scripts to work correctly
-	LDFLAGS += -X "github.com/pingcap/tidb-dashboard/pkg/utils/version.InternalVersion=$(shell scripts/describe-dashboard.sh internal-version)"
-	LDFLAGS += -X "github.com/pingcap/tidb-dashboard/pkg/utils/version.Standalone=No"
-	LDFLAGS += -X "github.com/pingcap/tidb-dashboard/pkg/utils/version.PDVersion=v5.4.30"
-	LDFLAGS += -X "github.com/pingcap/tidb-dashboard/pkg/utils/version.BuildTime=$(shell date -u '+%Y-%m-%d %I:%M:%S')"
-	LDFLAGS += -X "github.com/pingcap/tidb-dashboard/pkg/utils/version.BuildGitHash=$(shell scripts/describe-dashboard.sh git-hash)"
-endif
 
 GOVER_MAJOR := $(shell go version | sed -E -e "s/.*go([0-9]+)[.]([0-9]+).*/\1/")
 GOVER_MINOR := $(shell go version | sed -E -e "s/.*go([0-9]+)[.]([0-9]+).*/\2/")
@@ -98,14 +79,6 @@ build: pd-server pd-ctl pd-recover
 tools: pd-tso-bench pd-analysis pd-heartbeat-bench
 
 PD_SERVER_DEP :=
-ifeq ($(SWAGGER), 1)
-	PD_SERVER_DEP += swagger-spec
-endif
-ifneq ($(DASHBOARD_DISTRIBUTION_DIR),)
-	BUILD_TAGS += dashboard_distro
-	PD_SERVER_DEP += dashboard-replace-distro-info
-endif
-PD_SERVER_DEP += dashboard-ui
 
 pd-server: export GO111MODULE=on
 pd-server: ${PD_SERVER_DEP}
@@ -113,7 +86,7 @@ pd-server: ${PD_SERVER_DEP}
 
 pd-server-basic: export GO111MODULE=on
 pd-server-basic:
-	SWAGGER=0 DASHBOARD=0 $(MAKE) pd-server
+	$(MAKE) pd-server
 
 # dependent
 install-all-tools: export GO111MODULE=on
@@ -130,21 +103,6 @@ install-go-tools: export GO111MODULE=on
 install-go-tools:
 	@mkdir -p $(GO_TOOLS_BIN_PATH)
 	@grep '_' tools.go | sed 's/"//g' | awk '{print $$2}' | xargs go install
-
-swagger-spec: export GO111MODULE=on
-swagger-spec: install-go-tools
-	go mod vendor
-	swag init --parseVendor -generalInfo server/api/router.go --exclude vendor/github.com/pingcap/tidb-dashboard --output docs/swagger
-	go mod tidy
-	rm -rf vendor
-
-dashboard-ui: export GO111MODULE=on
-dashboard-ui:
-	./scripts/embed-dashboard-ui.sh
-
-dashboard-replace-distro-info:
-	rm -f pkg/dashboard/distro/distro_info.go
-	cp $(DASHBOARD_DISTRIBUTION_DIR)/distro_info.go pkg/dashboard/distro/distro_info.go
 
 # Tools
 pd-ctl: export GO111MODULE=on
@@ -177,7 +135,7 @@ basic-test:
 	GO111MODULE=on go test $(BASIC_TEST_PKGS) || { $(FAILPOINT_DISABLE); exit 1; }
 	@$(FAILPOINT_DISABLE)
 
-test-with-cover: install-go-tools dashboard-ui
+test-with-cover: install-go-tools
 	# testing all pkgs (expect TSO consistency test) with converage...
 	@$(FAILPOINT_ENABLE)
 	for PKG in $(TEST_PKGS); do\
@@ -189,7 +147,7 @@ test-with-cover: install-go-tools dashboard-ui
 
 # The command should be used in daily CI，it will split some tasks to run parallel.
 # It should retain report.xml,coverage,coverage.xml and package.list to analyze.
-test-with-cover-parallel: install-go-tools dashboard-ui split
+test-with-cover-parallel: install-go-tools split
 	@$(FAILPOINT_ENABLE)
 	set -euo pipefail;\
 	CGO_ENABLED=1 GO111MODULE=on gotestsum --junitfile report.xml -- -v --race -covermode=atomic -coverprofile=coverage $(shell cat package.list)  2>&1 || { $(FAILPOINT_DISABLE); }; \
@@ -200,7 +158,7 @@ test-tso-function: install-go-tools
 	# testing TSO function...
 	@$(DEADLOCK_ENABLE)
 	@$(FAILPOINT_ENABLE)
-	CGO_ENABLED=1 GO111MODULE=on go test -race -tags without_dashboard,tso_function_test $(TSO_INTEGRATION_TEST_PKGS) || { $(FAILPOINT_DISABLE); $(DEADLOCK_DISABLE); exit 1; }
+	CGO_ENABLED=1 GO111MODULE=on go test -race -tags tso_function_test $(TSO_INTEGRATION_TEST_PKGS) || { $(FAILPOINT_DISABLE); $(DEADLOCK_DISABLE); exit 1; }
 	@$(FAILPOINT_DISABLE)
 	@$(DEADLOCK_DISABLE)
 
@@ -208,7 +166,7 @@ test-tso-consistency: install-go-tools
 	# testing TSO consistency...
 	@$(DEADLOCK_ENABLE)
 	@$(FAILPOINT_ENABLE)
-	CGO_ENABLED=1 GO111MODULE=on go test -race -tags without_dashboard,tso_consistency_test $(TSO_INTEGRATION_TEST_PKGS) || { $(FAILPOINT_DISABLE); $(DEADLOCK_DISABLE); exit 1; }
+	CGO_ENABLED=1 GO111MODULE=on go test -race -tags tso_consistency_test $(TSO_INTEGRATION_TEST_PKGS) || { $(FAILPOINT_DISABLE); $(DEADLOCK_DISABLE); exit 1; }
 	@$(FAILPOINT_DISABLE)
 	@$(DEADLOCK_DISABLE)
 
@@ -271,7 +229,6 @@ clean-test:
 
 clean-build:
 	# Cleaning building files...
-	rm -rf .dashboard_download_cache/
 	rm -rf $(BUILD_BIN_PATH)
 	rm -rf $(GO_TOOLS_BIN_PATH)
 

@@ -16,7 +16,6 @@ jobs:
             ~/go/pkg/mod
             ~/.cache/go-build
             **/.tools
-            **/.dashboard_download_cache
           key: ${{ runner.os }}-golang-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-golang

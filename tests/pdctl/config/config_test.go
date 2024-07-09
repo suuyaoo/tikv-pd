@@ -739,7 +739,6 @@ func (s *configTestSuite) TestPDServerConfig(c *C) {
 	c.Assert(conf.KeyType, Equals, "table")
 	c.Assert(conf.RuntimeServices, DeepEquals, typeutil.StringSlice([]string{}))
 	c.Assert(conf.MetricStorage, Equals, "")
-	c.Assert(conf.DashboardAddress, Equals, "auto")
 	c.Assert(conf.FlowRoundByDigit, Equals, int(3))
 }
 

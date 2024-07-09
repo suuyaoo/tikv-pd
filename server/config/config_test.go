@@ -329,54 +329,42 @@ func newTestScheduleOption() (*PersistOptions, error) {
 
 func (s *testConfigSuite) TestPDServerConfig(c *C) {
 	tests := []struct {
-		cfgData          string
-		hasErr           bool
-		dashboardAddress string
+		cfgData string
+		hasErr  bool
 	}{
 		{
 			`
 [pd-server]
-dashboard-address = "http://127.0.0.1:2379"
 `,
 			false,
-			"http://127.0.0.1:2379",
 		},
 		{
 			`
 [pd-server]
-dashboard-address = "auto"
 `,
 			false,
-			"auto",
 		},
 		{
 			`
 [pd-server]
-dashboard-address = "none"
 `,
 			false,
-			"none",
 		},
 		{
 			"",
 			false,
-			"auto",
 		},
 		{
 			`
 [pd-server]
-dashboard-address = "127.0.0.1:2379"
 `,
 			true,
-			"",
 		},
 		{
 			`
 [pd-server]
-dashboard-address = "foo"
 `,
 			true,
-			"",
 		},
 	}
 
@@ -386,48 +374,7 @@ dashboard-address = "foo"
 		c.Assert(err, IsNil)
 		err = cfg.Adjust(&meta, false)
 		c.Assert(err != nil, Equals, t.hasErr)
-		if !t.hasErr {
-			c.Assert(cfg.PDServerCfg.DashboardAddress, Equals, t.dashboardAddress)
-		}
 	}
-}
-
-func (s *testConfigSuite) TestDashboardConfig(c *C) {
-	cfgData := `
-[dashboard]
-tidb-cacert-path = "/path/ca.pem"
-tidb-key-path = "/path/client-key.pem"
-tidb-cert-path = "/path/client.pem"
-`
-	cfg := NewConfig()
-	meta, err := toml.Decode(cfgData, &cfg)
-	c.Assert(err, IsNil)
-	err = cfg.Adjust(&meta, false)
-	c.Assert(err, IsNil)
-	c.Assert(cfg.Dashboard.TiDBCAPath, Equals, "/path/ca.pem")
-	c.Assert(cfg.Dashboard.TiDBKeyPath, Equals, "/path/client-key.pem")
-	c.Assert(cfg.Dashboard.TiDBCertPath, Equals, "/path/client.pem")
-
-	// Test different editions
-	tests := []struct {
-		Edition         string
-		EnableTelemetry bool
-	}{
-		{"Community", true},
-		{"Enterprise", false},
-	}
-	originalDefaultEnableTelemetry := defaultEnableTelemetry
-	for _, test := range tests {
-		defaultEnableTelemetry = true
-		initByLDFlags(test.Edition)
-		cfg = NewConfig()
-		meta, err = toml.Decode(cfgData, &cfg)
-		c.Assert(err, IsNil)
-		err = cfg.Adjust(&meta, false)
-		c.Assert(err, IsNil)
-		c.Assert(cfg.Dashboard.EnableTelemetry, Equals, test.EnableTelemetry)
-	}
-	defaultEnableTelemetry = originalDefaultEnableTelemetry
 }
 
 func (s *testConfigSuite) TestReplicationMode(c *C) {

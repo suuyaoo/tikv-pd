@@ -27,7 +27,6 @@ import (
 	"github.com/pingcap/kvproto/pkg/metapb"
 	"github.com/pingcap/kvproto/pkg/pdpb"
 	"github.com/pingcap/kvproto/pkg/replication_modepb"
-	"github.com/tikv/pd/pkg/dashboard"
 	"github.com/tikv/pd/pkg/mock/mockid"
 	"github.com/tikv/pd/pkg/testutil"
 	"github.com/tikv/pd/server"
@@ -65,8 +64,6 @@ type clusterTestSuite struct {
 func (s *clusterTestSuite) SetUpSuite(c *C) {
 	s.ctx, s.cancel = context.WithCancel(context.Background())
 	server.EnableZap = true
-	// to prevent GetStorage
-	dashboard.SetCheckInterval(30 * time.Minute)
 }
 
 func (s *clusterTestSuite) TearDownSuite(c *C) {

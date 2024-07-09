@@ -453,11 +453,6 @@ func (o *PersistOptions) GetMaxResetTSGap() time.Duration {
 	return o.GetPDServerConfig().MaxResetTSGap.Duration
 }
 
-// GetDashboardAddress gets dashboard address.
-func (o *PersistOptions) GetDashboardAddress() string {
-	return o.GetPDServerConfig().DashboardAddress
-}
-
 // IsUseRegionStorage returns if the independent region storage is enabled.
 func (o *PersistOptions) IsUseRegionStorage() bool {
 	return o.GetPDServerConfig().UseRegionStorage

@@ -23,10 +23,6 @@ jobs:
 
             async function run() {
               const { title } = context.payload.pull_request;
-              if (title.startsWith("Update TiDB Dashboard to")) {
-                await doAddLabels(["component/visualization", "require-LGT1"]);
-                return;
-              }
 
               console.log("Not matching any label rules, skip");
             }

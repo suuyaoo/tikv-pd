@@ -15,7 +15,6 @@
 package config
 
 import (
-	"crypto/tls"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -41,7 +40,6 @@ import (
 	"github.com/pingcap/kvproto/pkg/metapb"
 	"github.com/pingcap/log"
 	"go.etcd.io/etcd/embed"
-	"go.etcd.io/etcd/pkg/transport"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -158,8 +156,6 @@ type Config struct {
 	logger   *zap.Logger
 	logProps *log.ZapProperties
 
-	Dashboard DashboardConfig `toml:"dashboard" json:"dashboard"`
-
 	ReplicationMode ReplicationModeConfig `toml:"replication-mode" json:"replication-mode"`
 }
 
@@ -235,8 +231,6 @@ const (
 	defaultEnablePlacementRules = true
 	defaultEnableGRPCGateway    = true
 	defaultDisableErrorVerbose  = true
-
-	defaultDashboardAddress = "auto"
 
 	defaultDRWaitStoreTimeout = time.Minute
 	defaultDRWaitSyncTimeout  = time.Minute
@@ -395,10 +389,6 @@ func (c *Config) Parse(arguments []string) error {
 		}
 		if meta.IsDefined("schedule", "disable-raft-learner") {
 			msg := fmt.Sprintf("disable-raft-learner in %s is deprecated", c.configFile)
-			c.WarningMsgs = append(c.WarningMsgs, msg)
-		}
-		if meta.IsDefined("dashboard", "disable-telemetry") {
-			msg := fmt.Sprintf("disable-telemetry in %s is deprecated, use enable-telemetry instead", c.configFile)
 			c.WarningMsgs = append(c.WarningMsgs, msg)
 		}
 	}
@@ -621,8 +611,6 @@ func (c *Config) Adjust(meta *toml.MetaData, reloading bool) error {
 	if !configMetaData.IsDefined("enable-grpc-gateway") {
 		c.EnableGRPCGateway = defaultEnableGRPCGateway
 	}
-
-	c.Dashboard.adjust(configMetaData.Child("dashboard"))
 
 	c.ReplicationMode.adjust(configMetaData.Child("replication-mode"))
 
@@ -1124,8 +1112,6 @@ type PDServerConfig struct {
 	// MetricStorage is the cluster metric storage.
 	// Currently we use prometheus as metric storage, we may use PD/TiKV as metric storage later.
 	MetricStorage string `toml:"metric-storage" json:"metric-storage"`
-	// There are some values supported: "auto", "none", or a specific address, default: "auto"
-	DashboardAddress string `toml:"dashboard-address" json:"dashboard-address"`
 	// TraceRegionFlow the option to update flow information of regions.
 	// WARN: TraceRegionFlow is deprecated.
 	TraceRegionFlow bool `toml:"trace-region-flow" json:"trace-region-flow,string,omitempty"`
@@ -1143,9 +1129,6 @@ func (c *PDServerConfig) adjust(meta *configMetaData) error {
 	}
 	if !meta.IsDefined("runtime-services") {
 		c.RuntimeServices = defaultRuntimeServices
-	}
-	if !meta.IsDefined("dashboard-address") {
-		c.DashboardAddress = defaultDashboardAddress
 	}
 	if !meta.IsDefined("trace-region-flow") {
 		c.TraceRegionFlow = defaultTraceRegionFlow
@@ -1192,14 +1175,6 @@ func (c *PDServerConfig) Clone() *PDServerConfig {
 
 // Validate is used to validate if some pd-server configurations are right.
 func (c *PDServerConfig) Validate() error {
-	switch c.DashboardAddress {
-	case "auto":
-	case "none":
-	default:
-		if err := ValidateURLWithScheme(c.DashboardAddress); err != nil {
-			return err
-		}
-	}
 	if c.FlowRoundByDigit < 0 {
 		return errs.ErrConfigItem.GenWithStack("flow round by digit cannot be negative number")
 	}
@@ -1319,43 +1294,6 @@ func (c *Config) GenEmbedEtcdConfig() (*embed.Config, error) {
 	}
 
 	return cfg, nil
-}
-
-// DashboardConfig is the configuration for tidb-dashboard.
-type DashboardConfig struct {
-	TiDBCAPath         string `toml:"tidb-cacert-path" json:"tidb-cacert-path"`
-	TiDBCertPath       string `toml:"tidb-cert-path" json:"tidb-cert-path"`
-	TiDBKeyPath        string `toml:"tidb-key-path" json:"tidb-key-path"`
-	PublicPathPrefix   string `toml:"public-path-prefix" json:"public-path-prefix"`
-	InternalProxy      bool   `toml:"internal-proxy" json:"internal-proxy"`
-	EnableTelemetry    bool   `toml:"enable-telemetry" json:"enable-telemetry"`
-	EnableExperimental bool   `toml:"enable-experimental" json:"enable-experimental"`
-	// WARN: DisableTelemetry is deprecated.
-	DisableTelemetry bool `toml:"disable-telemetry" json:"disable-telemetry,omitempty"`
-}
-
-// ToTiDBTLSConfig generates tls config for connecting to TiDB, used by tidb-dashboard.
-func (c *DashboardConfig) ToTiDBTLSConfig() (*tls.Config, error) {
-	if (len(c.TiDBCertPath) != 0 && len(c.TiDBKeyPath) != 0) || len(c.TiDBCAPath) != 0 {
-		tlsInfo := transport.TLSInfo{
-			CertFile:      c.TiDBCertPath,
-			KeyFile:       c.TiDBKeyPath,
-			TrustedCAFile: c.TiDBCAPath,
-		}
-		tlsConfig, err := tlsInfo.ClientConfig()
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
-		return tlsConfig, nil
-	}
-	return nil, nil
-}
-
-func (c *DashboardConfig) adjust(meta *configMetaData) {
-	if !meta.IsDefined("enable-telemetry") {
-		c.EnableTelemetry = defaultEnableTelemetry
-	}
-	c.EnableTelemetry = c.EnableTelemetry && !c.DisableTelemetry
 }
 
 // ReplicationModeConfig is the configuration for the replication policy.
