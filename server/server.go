@@ -467,32 +467,40 @@ func (s *Server) Close() {
 	s.stopServerLoop()
 
 	if s.client != nil {
+		log.Info("close etcd client")
 		if err := s.client.Close(); err != nil {
 			log.Error("close etcd client meet error", errs.ZapError(errs.ErrCloseEtcdClient, err))
 		}
 	}
 
 	if s.httpClient != nil {
+		log.Info("close http client")
 		s.httpClient.CloseIdleConnections()
 	}
 
 	if s.member.Etcd() != nil {
+		log.Info("close etcd embed")
 		s.member.Close()
 	}
 
 	if s.hbStreams != nil {
+		log.Info("close hb stream")
 		s.hbStreams.Close()
 	}
+
+	log.Info("close storage")
 	if err := s.storage.Close(); err != nil {
 		log.Error("close storage meet error", errs.ZapError(err))
 	}
 
+	log.Info("close hot region storage")
 	if err := s.hotRegionStorage.Close(); err != nil {
 		log.Error("close hot region storage meet error", errs.ZapError(err))
 	}
 
 	// Run callbacks
 	for _, cb := range s.closeCallbacks {
+		log.Info("close callback")
 		cb()
 	}
 
@@ -534,7 +542,7 @@ func (s *Server) LoopContext() context.Context {
 
 func (s *Server) startServerLoop(ctx context.Context) {
 	s.serverLoopCtx, s.serverLoopCancel = context.WithCancel(ctx)
-	s.serverLoopWg.Add(5)
+	s.serverLoopWg.Add(4)
 	go s.leaderLoop()
 	go s.etcdLeaderLoop()
 	go s.serverMetricsLoop()
