@@ -18,6 +18,8 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"reflect"
+	"slices"
 	"strings"
 	"time"
 
@@ -92,7 +94,9 @@ func PrepareJoinCluster(cfg *config.Config) error {
 	}
 
 	log.Info("prepare join cluster",
-		zap.String("join", cfg.Join))
+		zap.String("name", cfg.Name),
+		zap.String("join", cfg.Join),
+	)
 
 	filePath := path.Join(cfg.DataDir, "join")
 	// Read the persist join config
@@ -170,8 +174,16 @@ func prepareJoinClusterLocked(cfg *config.Config, client *clientv3.Client, fileP
 		}
 		for _, m := range listResp.Members {
 			if len(m.Name) == 0 {
-				log.Info("there is a member that has not joined successfully")
-				needWaiting = true
+				peerUrls := strings.Split(cfg.AdvertisePeerUrls, ",")
+				slices.Sort(peerUrls)
+				slices.Sort(m.PeerURLs)
+				if !reflect.DeepEqual(peerUrls, m.PeerURLs) {
+					log.Info("there is a member that has not joined successfully",
+						zap.Strings("client urls", m.ClientURLs),
+						zap.Strings("peer urls", m.PeerURLs),
+					)
+					needWaiting = true
+				}
 			}
 		}
 		if !needWaiting {
@@ -181,9 +193,38 @@ func prepareJoinClusterLocked(cfg *config.Config, client *clientv3.Client, fileP
 
 	memberCount := 0
 	existed := false
+	missingData := false
+	memberID := uint64(0)
 	for _, m := range listResp.Members {
 		if m.Name == cfg.Name {
-			existed = true
+			peerUrls := strings.Split(cfg.AdvertisePeerUrls, ",")
+			slices.Sort(peerUrls)
+			slices.Sort(m.PeerURLs)
+			log.Info("found member",
+				zap.String("name", m.Name),
+				zap.Strings("client urls", m.ClientURLs),
+				zap.Strings("peer urls", m.PeerURLs),
+			)
+			if reflect.DeepEqual(peerUrls, m.PeerURLs) {
+				missingData = true
+				memberID = m.ID
+			} else {
+				existed = true
+			}
+		} else if len(m.Name) == 0 {
+			peerUrls := strings.Split(cfg.AdvertisePeerUrls, ",")
+			slices.Sort(peerUrls)
+			slices.Sort(m.PeerURLs)
+			log.Info("empty member",
+				zap.Strings("client urls", m.ClientURLs),
+				zap.Strings("peer urls", m.PeerURLs),
+			)
+			if reflect.DeepEqual(peerUrls, m.PeerURLs) {
+				missingData = true
+				memberID = m.ID
+			} else {
+				existed = true
+			}
 		}
 		if !m.IsLearner {
 			memberCount++
@@ -193,7 +234,9 @@ func prepareJoinClusterLocked(cfg *config.Config, client *clientv3.Client, fileP
 	log.Info("list etcd member info",
 		zap.Int("total count", len(listResp.Members)),
 		zap.Int("member count", memberCount),
-		zap.Bool("existed", existed))
+		zap.Bool("existed", existed),
+		zap.Bool("missing data", missingData),
+	)
 
 	// - A failed PD re-joins the previous cluster.
 	if existed {
@@ -208,6 +251,17 @@ func prepareJoinClusterLocked(cfg *config.Config, client *clientv3.Client, fileP
 	})
 	// - A new PD joins an existing cluster.
 	// - A deleted PD joins to previous cluster.
+	if missingData {
+		_, err := etcdutil.RemoveEtcdMember(client, memberID)
+		if err != nil {
+			log.Warn("del etcd member fail",
+				zap.Uint64("id", memberID),
+				zap.Error(err),
+			)
+			return errors.New("missing data or join a duplicated pd")
+		}
+	}
+
 	for {
 		addResp, err = etcdutil.AddEtcdLearner(client, []string{cfg.AdvertisePeerUrls})
 		if err != nil {
@@ -217,6 +271,7 @@ func prepareJoinClusterLocked(cfg *config.Config, client *clientv3.Client, fileP
 			break
 		}
 	}
+
 	failpoint.Label("LabelSkipAddMember")
 
 	var (
@@ -240,7 +295,12 @@ func prepareJoinClusterLocked(cfg *config.Config, client *clientv3.Client, fileP
 				listSucc = true
 			}
 			if len(n) == 0 {
-				return errors.New("there is a member that has not joined successfully")
+				peerUrls := strings.Split(cfg.AdvertisePeerUrls, ",")
+				slices.Sort(peerUrls)
+				slices.Sort(memb.PeerURLs)
+				if !reflect.DeepEqual(peerUrls, memb.PeerURLs) {
+					return errors.New("there is a member that has not joined successfully")
+				}
 			}
 			for _, m := range memb.PeerURLs {
 				pds = append(pds, fmt.Sprintf("%s=%s", n, m))
