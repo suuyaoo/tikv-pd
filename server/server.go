@@ -67,6 +67,7 @@ import (
 
 const (
 	etcdTimeout           = time.Second * 3
+	etcdAutoSyncTimeout   = time.Second * 5
 	serverMetricsInterval = time.Minute
 	leaderTickInterval    = 50 * time.Millisecond
 	// pdRootPath for all pd servers.
@@ -312,10 +313,11 @@ func (s *Server) startEtcd(ctx context.Context) error {
 	lgc := zap.NewProductionConfig()
 	lgc.Encoding = log.ZapEncodingName
 	client, err := clientv3.New(clientv3.Config{
-		Endpoints:   endpoints,
-		DialTimeout: etcdTimeout,
-		TLS:         tlsConfig,
-		LogConfig:   &lgc,
+		Endpoints:        endpoints,
+		DialTimeout:      etcdTimeout,
+		AutoSyncInterval: etcdAutoSyncTimeout,
+		TLS:              tlsConfig,
+		LogConfig:        &lgc,
 	})
 	if err != nil {
 		return errs.ErrNewEtcdClient.Wrap(err).GenWithStackByCause()

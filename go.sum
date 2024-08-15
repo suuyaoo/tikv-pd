@@ -118,8 +118,6 @@ github.com/google/gofuzz v1.0.0/go.mod h1:dBl0BpW6vV/+mYPU4Po3pmUjxk6FQPldtuIdl/
 github.com/google/renameio v0.1.0/go.mod h1:KWCgfxg9yswjAJkECMjeO8J8rahYeXnNhOm40UhjYkI=
 github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 h1:El6M4kTTCOh6aBiKaUGG7oYTSPP8MxqL4YI3kZKwcP4=
 github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510/go.mod h1:pupxD2MaaD3pAXIBCelhxNneeOaAeabZDe5s4K6zSpQ=
-github.com/google/uuid v1.0.0 h1:b4Gk+7WdP/d3HZH8EJsZpvV7EtDOgaZLtnaNGIu1adA=
-github.com/google/uuid v1.0.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/gorilla/mux v1.7.4 h1:VuZ8uybHlWmqV03+zRzdwKL4tUnIp1MAQtp1mIFE1bc=
 github.com/gorilla/mux v1.7.4/go.mod h1:DVbg23sWSpFRCP0SfiEN6jmj59UnW/n46BH5rLB71So=
 github.com/gorilla/websocket v1.4.0/go.mod h1:E7qHFY5m1UJ88s3WnNqhKjPHQ0heANvMoAMk2YaljkQ=
@@ -299,8 +297,8 @@ github.com/stretchr/testify v1.6.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.8.1 h1:w7B6lhMri9wdJUVmEZPGGhZzrYTPvgJArz7wNPgYKsk=
 github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
-github.com/suuyaoo/etcd v0.34.28-0.20240709072321-aad4784ea334 h1:+e9zs5yATmPh1JK5WQ7g3ifsw+jgbIRdv7h31cfhO1w=
-github.com/suuyaoo/etcd v0.34.28-0.20240709072321-aad4784ea334/go.mod h1:WXozbnDNnpqlZuyMGBjqdNTCvRZ6+GcFcdNeBYLDwlQ=
+github.com/suuyaoo/etcd v0.34.28-0.20240815052415-eb44762f9dd7 h1:FwVw4BTEy1pBT8aQR6bShFSatuk5tvsXZxAXtHFzOEk=
+github.com/suuyaoo/etcd v0.34.28-0.20240815052415-eb44762f9dd7/go.mod h1:XtLl59AFKSuwKTq1z2TW3ZC1Oid5LD/pIGatPADL+RU=
 github.com/suuyaoo/tikv-kvproto v0.0.0-20240416144935-40786da7422c h1:CrKqAhJouuJAbsdzykIzG7svMYKm1DvndLrOF0pdhrE=
 github.com/suuyaoo/tikv-kvproto v0.0.0-20240416144935-40786da7422c/go.mod h1:DJgeP2zpgL7LvAzuZBKYu3Cpcq5II+xN16lgri5brks=
 github.com/syndtr/goleveldb v1.0.1-0.20190318030020-c3a204f8e965 h1:1oFLiOyVl+W7bnBzGhf7BbIv9loSFQcieWWYIjLqcAw=

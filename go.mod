@@ -61,7 +61,6 @@ require (
 	github.com/golang-jwt/jwt v3.2.1+incompatible // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
-	github.com/google/uuid v1.0.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.0.1-0.20190118093823-f849b5445de4 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.12.1 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
@@ -105,5 +104,5 @@ require (
 
 replace (
 	github.com/pingcap/kvproto => github.com/suuyaoo/tikv-kvproto v0.0.0-20240416144935-40786da7422c
-	go.etcd.io/etcd => github.com/suuyaoo/etcd v0.34.28-0.20240709072321-aad4784ea334
+	go.etcd.io/etcd => github.com/suuyaoo/etcd v0.34.28-0.20240815052415-eb44762f9dd7
 )
