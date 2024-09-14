@@ -21,6 +21,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/google/gops/agent"
 	grpcprometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/pingcap/errors"
 	"github.com/pingcap/log"
@@ -60,6 +61,10 @@ func main() {
 	if cfg.ConfigCheck {
 		server.PrintConfigCheckMsg(cfg)
 		exit(0)
+	}
+
+	if err := agent.Listen(agent.Options{}); err != nil {
+		log.Error("gops failed", zap.Error(err))
 	}
 
 	// New zap logger
