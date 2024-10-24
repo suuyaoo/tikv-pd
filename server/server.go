@@ -1211,6 +1211,25 @@ func (s *Server) leaderLoop() {
 			log.Info("start to watch pd leader", zap.Stringer("pd-leader", leader))
 			// WatchLeader will keep looping and never return unless the PD leader has changed.
 			s.member.WatchLeader(s.serverLoopCtx, leader, rev)
+			oldLeaderName := leader.GetName()
+			for {
+				leader, rev, checkAgain = s.member.CheckLeader()
+				if checkAgain {
+					continue
+				}
+				if leader == nil {
+					break
+				}
+				if oldLeaderName != leader.GetName() {
+					log.Info("start to watch pd leader", zap.Stringer("pd-leader", leader))
+				}
+				oldLeaderName = leader.GetName()
+				s.member.WatchLeader(s.serverLoopCtx, leader, rev)
+				if s.IsClosed() {
+					log.Info("server is closed, return leader loop")
+					return
+				}
+			}
 			syncer.StopSyncWithLeader()
 			log.Info("pd leader has changed, try to re-campaign a pd leader")
 		}

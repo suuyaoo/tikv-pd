@@ -189,7 +189,8 @@ func (ls *Leadership) Watch(serverCtx context.Context, revision int64) {
 	)
 	watcher := clientv3.NewWatcher(ls.client)
 	defer watcher.Close()
-	ctx, cancel := context.WithCancel(serverCtx)
+	ctx, cancel := context.WithTimeout(serverCtx, etcdutil.DefaultDialTimeout)
+	ctx = clientv3.WithRequireLeader(ctx)
 	defer cancel()
 	// The revision is the revision of last modification on this key.
 	// If the revision is compacted, will meet required revision has been compacted error.

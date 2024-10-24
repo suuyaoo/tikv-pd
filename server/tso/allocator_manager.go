@@ -361,6 +361,14 @@ func (am *AllocatorManager) allocatorLeaderLoop(ctx context.Context, allocator *
 				zap.String("local-tso-allocator-name", am.member.Member().Name))
 			// WatchAllocatorLeader will keep looping and never return unless the Local TSO Allocator leader has changed.
 			allocator.WatchAllocatorLeader(ctx, allocatorLeader, rev)
+			oldLeaderName := allocatorLeader.GetName()
+			allocatorLeader, _, checkAgain = allocator.CheckAllocatorLeader()
+			if checkAgain {
+				continue
+			}
+			if allocatorLeader != nil && oldLeaderName == allocatorLeader.GetName() {
+				continue
+			}
 			log.Info("local tso allocator leader has changed, try to re-campaign a local tso allocator leader",
 				zap.String("dc-location", allocator.GetDCLocation()))
 		}
