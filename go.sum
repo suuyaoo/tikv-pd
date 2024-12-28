@@ -267,8 +267,8 @@ github.com/stretchr/testify v1.6.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.8.1 h1:w7B6lhMri9wdJUVmEZPGGhZzrYTPvgJArz7wNPgYKsk=
 github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
-github.com/suuyaoo/etcd v0.34.28-0.20240914030827-475c1fd9c072 h1:LwKN6K3+4ZJNmmAxNGM8N/KREUOdgWhnlM+t+kjPBxs=
-github.com/suuyaoo/etcd v0.34.28-0.20240914030827-475c1fd9c072/go.mod h1:XtLl59AFKSuwKTq1z2TW3ZC1Oid5LD/pIGatPADL+RU=
+github.com/suuyaoo/etcd v0.34.28-0.20241228110048-1d83b42efbfd h1:NCbHY7c8W25k3yQGgUoh9hQBt0CJBf3giNbMf27cmBc=
+github.com/suuyaoo/etcd v0.34.28-0.20241228110048-1d83b42efbfd/go.mod h1:XtLl59AFKSuwKTq1z2TW3ZC1Oid5LD/pIGatPADL+RU=
 github.com/suuyaoo/tikv-kvproto v0.0.0-20240416144935-40786da7422c h1:CrKqAhJouuJAbsdzykIzG7svMYKm1DvndLrOF0pdhrE=
 github.com/suuyaoo/tikv-kvproto v0.0.0-20240416144935-40786da7422c/go.mod h1:DJgeP2zpgL7LvAzuZBKYu3Cpcq5II+xN16lgri5brks=
 github.com/syndtr/goleveldb v1.0.1-0.20190318030020-c3a204f8e965 h1:1oFLiOyVl+W7bnBzGhf7BbIv9loSFQcieWWYIjLqcAw=

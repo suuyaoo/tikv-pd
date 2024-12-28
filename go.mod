@@ -105,5 +105,5 @@ require (
 
 replace (
 	github.com/pingcap/kvproto => github.com/suuyaoo/tikv-kvproto v0.0.0-20240416144935-40786da7422c
-	go.etcd.io/etcd => github.com/suuyaoo/etcd v0.34.28-0.20240914030827-475c1fd9c072
+	go.etcd.io/etcd => github.com/suuyaoo/etcd v0.34.28-0.20241228110048-1d83b42efbfd
 )
