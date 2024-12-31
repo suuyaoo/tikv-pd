@@ -99,11 +99,12 @@ require (
 	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4 // indirect
 	google.golang.org/genproto v0.0.0-20190927181202-20e1ac93f88c // indirect
 	google.golang.org/protobuf v1.26.0-rc.1 // indirect
-	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
+	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 replace (
 	github.com/pingcap/kvproto => github.com/suuyaoo/tikv-kvproto v0.0.0-20240416144935-40786da7422c
+	github.com/pingcap/log => github.com/suuyaoo/zlog-go v0.0.0-20241231053123-5dbf61404a67
 	go.etcd.io/etcd => github.com/suuyaoo/etcd v0.34.28-0.20241228110048-1d83b42efbfd
 )
