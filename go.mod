@@ -105,6 +105,6 @@ require (
 
 replace (
 	github.com/pingcap/kvproto => github.com/suuyaoo/tikv-kvproto v0.0.0-20240416144935-40786da7422c
-	github.com/pingcap/log => github.com/suuyaoo/zlog-go v0.0.0-20241231053123-5dbf61404a67
+	github.com/pingcap/log => github.com/suuyaoo/zlog-go v0.0.0-20250102022349-ce291d848b32
 	go.etcd.io/etcd => github.com/suuyaoo/etcd v0.34.28-0.20241228110048-1d83b42efbfd
 )

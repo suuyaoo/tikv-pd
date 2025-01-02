@@ -266,8 +266,8 @@ github.com/suuyaoo/etcd v0.34.28-0.20241228110048-1d83b42efbfd h1:NCbHY7c8W25k3y
 github.com/suuyaoo/etcd v0.34.28-0.20241228110048-1d83b42efbfd/go.mod h1:XtLl59AFKSuwKTq1z2TW3ZC1Oid5LD/pIGatPADL+RU=
 github.com/suuyaoo/tikv-kvproto v0.0.0-20240416144935-40786da7422c h1:CrKqAhJouuJAbsdzykIzG7svMYKm1DvndLrOF0pdhrE=
 github.com/suuyaoo/tikv-kvproto v0.0.0-20240416144935-40786da7422c/go.mod h1:DJgeP2zpgL7LvAzuZBKYu3Cpcq5II+xN16lgri5brks=
-github.com/suuyaoo/zlog-go v0.0.0-20241231053123-5dbf61404a67 h1:RBLhaqjV0zqffGyvptyVDWbP0WklBEttJvt20y+hhKY=
-github.com/suuyaoo/zlog-go v0.0.0-20241231053123-5dbf61404a67/go.mod h1:ORfBOFp1eteu2odzsyaxI+b8TzJwgjwyQcGhI+9SfEA=
+github.com/suuyaoo/zlog-go v0.0.0-20250102022349-ce291d848b32 h1:SYzHqE5ZtdHPg1Ql3FvGQNKCKqQnETSa6zYoeaS/LUY=
+github.com/suuyaoo/zlog-go v0.0.0-20250102022349-ce291d848b32/go.mod h1:ORfBOFp1eteu2odzsyaxI+b8TzJwgjwyQcGhI+9SfEA=
 github.com/syndtr/goleveldb v1.0.1-0.20190318030020-c3a204f8e965 h1:1oFLiOyVl+W7bnBzGhf7BbIv9loSFQcieWWYIjLqcAw=
 github.com/syndtr/goleveldb v1.0.1-0.20190318030020-c3a204f8e965/go.mod h1:9OrXJhf154huy1nPWmuSrkgjPUtUNhA+Zmy+6AESzuA=
 github.com/tklauser/go-sysconf v0.3.4/go.mod h1:Cl2c8ZRWfHD5IrfHo9VN+FX9kCFjIOyVklgXycLB6ek=
