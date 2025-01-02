@@ -107,6 +107,14 @@ func RemoveEtcdMember(client *clientv3.Client, id uint64) (*clientv3.MemberRemov
 	return rmResp, errors.WithStack(err)
 }
 
+// UpdateEtcdMember update member url by the given id.
+func UpdateEtcdMember(client *clientv3.Client, id uint64, peerURLs []string) (*clientv3.MemberUpdateResponse, error) {
+	ctx, cancel := context.WithTimeout(client.Ctx(), DefaultRequestTimeout)
+	updateResp, err := client.MemberUpdate(ctx, id, peerURLs)
+	cancel()
+	return updateResp, errors.WithStack(err)
+}
+
 // AddEtcdLearner adds an etcd learner.
 func AddEtcdLearner(client *clientv3.Client, urls []string) (*clientv3.MemberAddResponse, error) {
 	ctx, cancel := context.WithTimeout(client.Ctx(), DefaultRequestTimeout)

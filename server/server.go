@@ -334,8 +334,9 @@ func (s *Server) startEtcd(ctx context.Context) error {
 		if etcdServerID == m.ID {
 			etcdPeerURLs := strings.Join(m.PeerURLs, ",")
 			if s.cfg.AdvertisePeerUrls != etcdPeerURLs {
-				log.Info("update advertise peer urls", zap.String("from", s.cfg.AdvertisePeerUrls), zap.String("to", etcdPeerURLs))
-				s.cfg.AdvertisePeerUrls = etcdPeerURLs
+				log.Info("update advertise peer urls", zap.String("from", etcdPeerURLs), zap.String("to", s.cfg.AdvertisePeerUrls))
+				peerURLs := strings.Split(s.cfg.AdvertisePeerUrls, ",")
+				etcdutil.UpdateEtcdMember(client, m.ID, peerURLs)
 			}
 		}
 		if !m.IsLearner {
