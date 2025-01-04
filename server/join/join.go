@@ -90,7 +90,11 @@ func PrepareJoinCluster(cfg *config.Config) error {
 	}
 
 	if cfg.Join == cfg.AdvertiseClientUrls {
-		return errors.New("join self is forbidden")
+		log.Info("join self",
+			zap.String("name", cfg.Name),
+			zap.String("join", cfg.Join),
+		)
+		return nil
 	}
 
 	log.Info("prepare join cluster",
