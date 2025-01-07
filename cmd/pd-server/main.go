@@ -113,7 +113,8 @@ func main() {
 		sig = <-sc
 		if sig == syscall.SIGHUP {
 			log.Sync()
-			log.Rotate()
+			log.Reopen()
+			log.Info("got signal 1, reopening log...")
 			return
 		}
 		cancel()

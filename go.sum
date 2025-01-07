@@ -266,8 +266,8 @@ github.com/suuyaoo/etcd v0.34.28-0.20250107023829-9f6a6af0617a h1:erCni0Ox7MgqSh
 github.com/suuyaoo/etcd v0.34.28-0.20250107023829-9f6a6af0617a/go.mod h1:XtLl59AFKSuwKTq1z2TW3ZC1Oid5LD/pIGatPADL+RU=
 github.com/suuyaoo/tikv-kvproto v0.0.0-20240416144935-40786da7422c h1:CrKqAhJouuJAbsdzykIzG7svMYKm1DvndLrOF0pdhrE=
 github.com/suuyaoo/tikv-kvproto v0.0.0-20240416144935-40786da7422c/go.mod h1:DJgeP2zpgL7LvAzuZBKYu3Cpcq5II+xN16lgri5brks=
-github.com/suuyaoo/zlog-go v0.0.0-20250102022349-ce291d848b32 h1:SYzHqE5ZtdHPg1Ql3FvGQNKCKqQnETSa6zYoeaS/LUY=
-github.com/suuyaoo/zlog-go v0.0.0-20250102022349-ce291d848b32/go.mod h1:ORfBOFp1eteu2odzsyaxI+b8TzJwgjwyQcGhI+9SfEA=
+github.com/suuyaoo/zlog-go v0.0.0-20250107101124-c433e5a87f1a h1:5zkOAeAGL5A5F8z5bu3qHuVR+puIhRUCt0MkU5mvrOQ=
+github.com/suuyaoo/zlog-go v0.0.0-20250107101124-c433e5a87f1a/go.mod h1:Vf3uI5W75uOi5YWnPbhtXZRzW6sHzbSdps75JvT2V+I=
 github.com/syndtr/goleveldb v1.0.1-0.20190318030020-c3a204f8e965 h1:1oFLiOyVl+W7bnBzGhf7BbIv9loSFQcieWWYIjLqcAw=
 github.com/syndtr/goleveldb v1.0.1-0.20190318030020-c3a204f8e965/go.mod h1:9OrXJhf154huy1nPWmuSrkgjPUtUNhA+Zmy+6AESzuA=
 github.com/tklauser/go-sysconf v0.3.4/go.mod h1:Cl2c8ZRWfHD5IrfHo9VN+FX9kCFjIOyVklgXycLB6ek=
@@ -449,8 +449,6 @@ gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15/go.mod h1:Co6ibVJAznAaIkqp8
 gopkg.in/errgo.v2 v2.1.0/go.mod h1:hNsd1EY+bozCKY1Ytp96fpM3vjJbqLJn88ws8XvfDNI=
 gopkg.in/fsnotify.v1 v1.4.7 h1:xOHLXZwVvI9hhs+cLKq5+I5onOuwQLhQwiu63xxlHs4=
 gopkg.in/fsnotify.v1 v1.4.7/go.mod h1:Tz8NjZHkW78fSQdbUxIjBTcgA1z1m8ZHf0WmKUhAMys=
-gopkg.in/natefinch/lumberjack.v2 v2.2.1 h1:bBRl1b0OH9s/DuPhuXpNl+VtCaJXFZ5/uEFST95x9zc=
-gopkg.in/natefinch/lumberjack.v2 v2.2.1/go.mod h1:YD8tP3GAjkrDg1eZH7EGmyESg/lsYskCTPBJVb9jqSc=
 gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 h1:uRGJdciOHaEIrze2W8Q3AKkepLTh2hOroT7a+7czfdQ=
 gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7/go.mod h1:dt/ZhP58zS4L8KSrWDmTeBkI65Dw0HsyUHuEVlX15mw=
 gopkg.in/yaml.v2 v2.2.1/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
