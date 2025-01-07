@@ -111,6 +111,11 @@ func main() {
 	var sig os.Signal
 	go func() {
 		sig = <-sc
+		if sig == syscall.SIGHUP {
+			log.Sync()
+			log.Rotate()
+			return
+		}
 		cancel()
 	}()
 
