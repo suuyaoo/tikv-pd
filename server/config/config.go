@@ -210,9 +210,9 @@ const (
 	// We can enlarge both a little to reduce the network aggression.
 	// now embed etcd use TickMs for heartbeat, we will update
 	// after embed etcd decouples tick and heartbeat.
-	defaultTickInterval = 500 * time.Millisecond
+	defaultTickInterval = 5000 * time.Millisecond
 	// embed etcd has a check that `5 * tick > election`
-	defaultElectionInterval = 3000 * time.Millisecond
+	defaultElectionInterval = 30000 * time.Millisecond
 
 	defaultMetricsPushInterval = 15 * time.Second
 
